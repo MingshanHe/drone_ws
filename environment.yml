@@ -1,0 +1,37 @@
+# Conda environment for nanodrone-ai (Apple Silicon / arm64 friendly)
+#
+# Recommended: run  bash setup/install_env.sh  (creates this env AND installs
+# gym-pybullet-drones correctly). Or do it manually:
+#   conda env create -f environment.yml
+#   conda run -n nanodrone-ai pip install --no-deps \
+#     "gym-pybullet-drones @ git+https://github.com/utiasDSL/gym-pybullet-drones.git"
+#
+# Design notes:
+#  * pybullet ships no arm64-macOS wheel on PyPI and no longer compiles with the
+#    newest Xcode clang, so we take conda-forge's prebuilt binary.
+#  * Mixing pip-PyTorch with conda scientific packages causes an OpenMP runtime
+#    clash ("libomp.dylib already initialized" -> crash). Installing PyTorch from
+#    conda-forge too keeps a single OpenMP runtime in the process.
+#  * gym-pybullet-drones is installed separately with --no-deps so pip does not
+#    try to rebuild pybullet from source; all its deps are provided below.
+name: drone_ws
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  # ML / GPU (MPS) — conda-forge build includes Apple Metal support
+  - pytorch
+  - torchvision
+  # Scientific stack
+  - numpy
+  - scipy
+  - matplotlib
+  - control            # python-control, required by gym-pybullet-drones
+  - transforms3d       # required by gym-pybullet-drones at runtime
+  # Simulation + RL + vision
+  - pybullet           # prebuilt; no local compilation
+  - gymnasium
+  - stable-baselines3
+  - sb3-contrib  # RecurrentPPO for Lesson 29 step 6
+  - opencv             # provides cv2
