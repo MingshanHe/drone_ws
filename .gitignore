@@ -1,1 +1,7 @@
 __pycache__
+# large generated datasets live on the Hugging Face dataset repo (src/hf_dataset.py), not in git
+src/output/wm_dataset_*.npz
+hf_dataset/
+# reproducible scratch
+src/output/report/decoder_*.pth
+src/output/*_selftest*

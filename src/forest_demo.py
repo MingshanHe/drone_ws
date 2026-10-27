@@ -389,62 +389,89 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--row-dx", type=float, default=ROW_DX, help="row spacing along x (m)")
     ap.add_argument("--col-dy", type=float, default=COL_DY, help="pillar spacing inside a row (m)")
-    ap.add_argument("--video", default="learned", choices=list(COLORS_BGR))
+    ap.add_argument("--video", default="learned", choices=list(COLORS_BGR) + ["none"])
     ap.add_argument("--onboard", action="store_true",
                     help="also render a first-person video of the --video policy")
+    ap.add_argument("--model", default=None, help="world-model checkpoint (default output/world_model.pth)")
+    ap.add_argument("--no-learned", action="store_true",
+                    help="skip the PPO policy (it was trained on the pybullet world model's latents)")
+    ap.add_argument("--seeds", type=int, default=1,
+                    help="fly this many forests (seed, seed+1, ...); video/picture only for the first")
+    ap.add_argument("--tag", default="", help="output name tag: forest_<tag>_<policy>.mp4 / forest_<tag>_compare.png")
     args = ap.parse_args()
     torch.set_num_threads(1)  # tiny nets: threads only add overhead
+    tag = f"{args.tag}_" if args.tag else ""
 
-    pillars = forest_layout(args.rows, args.seed, args.row_dx, args.col_dy)
-    goal_x = FIRST_ROW_X + (args.rows - 1) * args.row_dx + 1.0
-    tmax = int(goal_x / 0.25 * 48)  # generous: even a slow detour fits
-
-    enc, pred, cheads, nhead, meta = load_model()
+    enc, pred, cheads, nhead, meta = load_model(args.model) if args.model else load_model()
+    print(f"[INFO] checkpoint {args.model or 'output/world_model.pth'}: trained on "
+          f"{meta.get('source', 'pybullet')}, camera {meta.get('fov_deg', 60):g} deg")
     policies = {
         "reactive": lambda: ReactivePolicy(enc, nhead),
         "wm-mpc": lambda: WMPolicy(enc, pred, cheads, meta),
     }
-    if os.path.exists(zip_path()):
+    if os.path.exists(zip_path()) and not args.no_learned:
         model = _load_policy(zip_path())
         policies["learned"] = lambda: LearnedPolicy(model, enc, pred, cheads, meta)
     elif args.video == "learned":
-        raise SystemExit(f"no {zip_path()} — run learn_policy.py first")
+        raise SystemExit(f"no {zip_path()} (or --no-learned) — pick --video wm-mpc/reactive/none")
 
     env = make_env()
-    cam = TopCamera(goal_x)
     os.makedirs(OUT_DIR, exist_ok=True)
-    print(f"[INFO] forest: {len(pillars)} pillars, {args.rows} rows, goal x={goal_x:.1f} m, "
-          f"start {START[:2].tolist()}")
+    totals = {name: {"crashes": [], "min_clear": [], "reached": [], "time_s": []} for name in policies}
+    results, pillars, goal_x, cam = {}, None, None, None
+    for k in range(args.seeds):
+        seed = args.seed + k
+        pillars = forest_layout(args.rows, seed, args.row_dx, args.col_dy)
+        goal_x = FIRST_ROW_X + (args.rows - 1) * args.row_dx + 1.0
+        tmax = int(goal_x / 0.25 * 48)  # generous: even a slow detour fits
+        cam = TopCamera(goal_x)
+        if k == 0:
+            print(f"[INFO] forest: {len(pillars)} pillars, {args.rows} rows, goal x={goal_x:.1f} m, "
+                  f"start {START[:2].tolist()}, {args.seeds} seed(s) from {args.seed}")
+        for name in ["reactive", "wm-mpc", "learned"]:
+            if name not in policies:
+                continue
+            writer = None
+            if k == 0 and name == args.video:
+                path = os.path.join(OUT_DIR, f"forest_{tag}{name}.mp4")
+                writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), 12,
+                                         (VIEW_W, VIEW_H))
+            ob_writer = None
+            if k == 0 and name == args.video and args.onboard:
+                ob_path = os.path.join(OUT_DIR, f"forest_{tag}{name}_onboard.mp4")
+                ob_writer = cv2.VideoWriter(ob_path, cv2.VideoWriter_fourcc(*"mp4v"), OB_FPS,
+                                            (OB_W, OB_H))
+            res = fly(env, policies[name](), pillars, goal_x, tmax, cam, writer, name, ob_writer)
+            if writer is not None:
+                writer.release()
+                print(f"[INFO] saved {path}")
+            if ob_writer is not None:
+                ob_writer.release()
+                print(f"[INFO] saved {ob_path}")
+            if k == 0:
+                results[name] = res
+            t = totals[name]
+            t["crashes"].append(len(res["crashes"]))
+            t["min_clear"].append(res["min_clear"])
+            t["reached"].append(bool(res["reached"]))
+            t["time_s"].append(res["time_s"])
+            print(
+                f"  seed {seed} {name:9s}: reached={res['reached']}  end error={res['end_err']:.2f} m  "
+                f"crashes={len(res['crashes'])}  min clearance={res['min_clear']:.2f} m  "
+                f"avoiding {res['avoid_share']:.0%} of decisions  time={res['time_s']:.1f} s"
+            )
+    if args.seeds > 1:
+        parts = []
+        for name, t in totals.items():
+            parts.append(
+                f"{name}: crashes/forest {np.mean(t['crashes']):.2f}, crash-free {np.mean([c == 0 for c in t['crashes']]):.0%}, "
+                f"reached {np.mean(t['reached']):.0%}, min clear {np.mean(t['min_clear']):.2f} m, time {np.mean(t['time_s']):.1f} s"
+            )
+        print(f"FOREST OK ({args.seeds} forests x {args.rows} rows): " + " | ".join(parts))
 
-    results = {}
-    for name in ["reactive", "wm-mpc", "learned"]:
-        if name not in policies:
-            continue
-        writer = None
-        if name == args.video:
-            path = os.path.join(OUT_DIR, f"forest_{name}.mp4")
-            writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), 12,
-                                     (VIEW_W, VIEW_H))
-        ob_writer = None
-        if name == args.video and args.onboard:
-            ob_path = os.path.join(OUT_DIR, f"forest_{name}_onboard.mp4")
-            ob_writer = cv2.VideoWriter(ob_path, cv2.VideoWriter_fourcc(*"mp4v"), OB_FPS,
-                                        (OB_W, OB_H))
-        res = fly(env, policies[name](), pillars, goal_x, tmax, cam, writer, name, ob_writer)
-        if writer is not None:
-            writer.release()
-            print(f"[INFO] saved {path}")
-        if ob_writer is not None:
-            ob_writer.release()
-            print(f"[INFO] saved {ob_path}")
-        results[name] = res
-        print(
-            f"  {name:9s}: reached={res['reached']}  end error={res['end_err']:.2f} m  "
-            f"crashes={len(res['crashes'])}  min clearance={res['min_clear']:.2f} m  "
-            f"avoiding {res['avoid_share']:.0%} of decisions  time={res['time_s']:.1f} s"
-        )
-
-    # comparison picture: empty forest from above + every trajectory
+    # comparison picture: empty forest from above + every trajectory (first forest)
+    pillars = forest_layout(args.rows, args.seed, args.row_dx, args.col_dy)
+    cam = TopCamera(goal_x)
     env.reset(seed=0)
     place_pillars(env, pillars)
     img = cam.render(env)
@@ -460,7 +487,7 @@ def main() -> None:
         y = 28 + 26 * i
         cv2.putText(img, s, (12, y), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 4, cv2.LINE_AA)
         cv2.putText(img, s, (12, y), cv2.FONT_HERSHEY_SIMPLEX, 0.65, COLORS_BGR[name], 2, cv2.LINE_AA)
-    out = os.path.join(OUT_DIR, "forest_compare.png")
+    out = os.path.join(OUT_DIR, f"forest_{tag}compare.png")
     cv2.imwrite(out, img)
     env.close()
     print(f"[INFO] saved {out}")

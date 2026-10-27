@@ -330,11 +330,17 @@ def counterfactual_labels(data: dict) -> tuple:
     Valid at *every* step, because it never needs the flown future — this is
     what densifies the action-conditioning supervision beyond the executed
     command."""
+    if "cf_labels" in data:
+        # datasets without a pillar list (real rooms, gen_wm_dataset_hyperdrone.py --scene rooms)
+        # store labels computed through their own geometry at generation time
+        return np.asarray(data["cf_labels"], dtype=np.uint8), np.asarray(data["cf_visible"], dtype=np.uint8)
     R, L = data["frames"].shape[:2]
     taus = np.arange(H_MAX + 1) / CTRL_HZ  # (K+1,)
     cf = np.zeros((R, L, len(ACTION_VECS), len(HORIZONS), len(RADII)), dtype=np.uint8)
     vis = np.ones((R, L, len(ACTION_VECS)), dtype=np.uint8)
-    cos_fov = np.cos(np.radians(FOV_HALF_DEG))
+    # a dataset rendered with another camera (gen_wm_dataset_hyperdrone.py --fov-deg)
+    # records its own half-FOV; the pybullet default stays 28 deg
+    cos_fov = np.cos(np.radians(float(data.get("fov_half_deg", FOV_HALF_DEG))))
     for r in range(R):
         pil = data["pillars"][r]
         pil = pil[~np.isnan(pil[:, 0])]

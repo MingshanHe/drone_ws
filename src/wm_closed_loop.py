@@ -284,15 +284,19 @@ def run_episode(
     }
 
 
-def load_or_train(device: str = "cpu"):
+def load_or_train(device: str = "cpu", path: str = None):
     """Course convention: every step runs on its own. No checkpoint -> train a
-    tiny one right here (slower but self-contained)."""
-    if not os.path.exists(MODEL):
+    tiny one right here (slower but self-contained). `path` evaluates another
+    checkpoint (e.g. one trained on hyperdrone data) instead of MODEL."""
+    path = path or MODEL
+    if not os.path.exists(path):
+        if path != MODEL:
+            raise SystemExit(f"no checkpoint at {path}")
         print(f"[INFO] no model at {MODEL}; training a tiny one first ...")
         ckpt, _ = train(gen(12, 100), epochs=40)
         os.makedirs(os.path.dirname(MODEL), exist_ok=True)
         torch.save(ckpt, MODEL)
-    return load_model(MODEL, device=device)
+    return load_model(path, device=device)
 
 
 def _save_plot(reactive: dict, wm: dict) -> None:
@@ -329,9 +333,10 @@ def main() -> None:
     ap.add_argument("--gui", action="store_true")
     ap.add_argument("--seed", type=int, default=SCENARIO_SEED)
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--model", default=None, help="checkpoint (default output/world_model.pth)")
     args = ap.parse_args()
 
-    enc, pred, cheads, nhead, meta = load_or_train(device="cpu")
+    enc, pred, cheads, nhead, meta = load_or_train(device="cpu", path=args.model)
     env = make_env(gui=args.gui)
     reactive = run_episode(env, ReactivePolicy(enc, nhead), args.seed)
     wm = run_episode(env, WMPolicy(enc, pred, cheads, meta), args.seed)

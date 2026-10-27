@@ -1,0 +1,319 @@
+conta: downloading 2647a925e3476c42d2e038468351379d71d6ecd2 (ProcTHOR-Train-20.glb) from https://huggingface.co/datasets/conta-shards/procthor/resolve/main/data/2647a925e3476c42d2e038468351379d71d6ecd2
+conta: downloading cd7165a8ce89214dd4fb2b5d24c246706c96b7d7 (ProcTHOR-Train-22.glb) from https://huggingface.co/datasets/conta-shards/procthor/resolve/main/data/cd7165a8ce89214dd4fb2b5d24c246706c96b7d7
+conta: downloading e0b88fdac0052e00daf15c5e7150b78e834823f9 (ProcTHOR-Train-23.glb) from https://huggingface.co/datasets/conta-shards/procthor/resolve/main/data/e0b88fdac0052e00daf15c5e7150b78e834823f9
+[INFO] checkpoint src/output/world_model_pybullet_ref.pth: trained on pybullet, camera 60 deg; hyperdrone arena style pybullet
+[INFO] house ProcTHOR-Train-16: 38 starts in 10s
+[INFO] house ProcTHOR-Train-17: 38 starts in 9s
+[INFO] house ProcTHOR-Train-18: 38 starts in 8s
+[INFO] house ProcTHOR-Train-19: 38 starts in 9s
+[INFO] house ProcTHOR-Train-20: 37 starts in 17s
+[INFO] house ProcTHOR-Train-21: 37 starts in 4s
+[INFO] house ProcTHOR-Train-22: 37 starts in 18s
+[INFO] house ProcTHOR-Train-23: 37 starts in 10s
+  seed 1000 (ProcTHOR-Train-16): contact at  4.6-> 4.5 s (hit/hit), distance 3.2->3.1 m, mean clear 1.21->1.18 m, trigger   4->  0
+  seed 1001 (ProcTHOR-Train-17): contact at  4.3-> 7.0 s (hit/hit), distance 3.3->5.1 m, mean clear 0.90->0.93 m, trigger  -1-> 16
+  seed 1002 (ProcTHOR-Train-18): contact at  3.7-> 3.7 s (hit/hit), distance 2.9->2.9 m, mean clear 1.01->1.01 m, trigger  -1-> -1
+  seed 1003 (ProcTHOR-Train-19): contact at  7.1-> 7.4 s (hit/hit), distance 5.6->5.7 m, mean clear 0.92->0.87 m, trigger  -1-> 60
+  seed 1004 (ProcTHOR-Train-20): contact at  4.2-> 5.8 s (hit/hit), distance 3.3->3.8 m, mean clear 0.86->0.94 m, trigger  -1-> 12
+  seed 1005 (ProcTHOR-Train-21): contact at  3.2-> 3.2 s (hit/hit), distance 2.5->2.5 m, mean clear 0.93->0.93 m, trigger  -1-> -1
+  seed 1006 (ProcTHOR-Train-22): contact at  4.9-> 7.5 s (hit/none), distance 3.5->5.5 m, mean clear 0.84->0.90 m, trigger  32->  0
+  seed 1007 (ProcTHOR-Train-23): contact at  6.6-> 7.5 s (hit/none), distance 5.2->6.3 m, mean clear 1.37->1.59 m, trigger  -1->  0
+  seed 1008 (ProcTHOR-Train-16): contact at  4.7-> 5.8 s (hit/hit), distance 3.2->4.0 m, mean clear 1.21->1.10 m, trigger   8->  0
+  seed 1009 (ProcTHOR-Train-17): contact at  3.3-> 4.2 s (hit/hit), distance 2.4->3.0 m, mean clear 1.13->1.18 m, trigger  32->  0
+  seed 1010 (ProcTHOR-Train-18): contact at  4.5-> 4.8 s (hit/hit), distance 3.6->3.4 m, mean clear 0.84->0.66 m, trigger  -1-> 28
+  seed 1011 (ProcTHOR-Train-19): contact at  5.1-> 6.4 s (hit/hit), distance 4.0->4.8 m, mean clear 0.82->1.09 m, trigger  -1->  0
+  seed 1012 (ProcTHOR-Train-20): contact at  7.5-> 6.5 s (none/hit), distance 5.7->4.7 m, mean clear 1.34->1.37 m, trigger 272-> 72
+  seed 1013 (ProcTHOR-Train-21): contact at  3.4-> 3.2 s (hit/hit), distance 2.5->2.2 m, mean clear 0.82->0.95 m, trigger  84-> 28
+  seed 1014 (ProcTHOR-Train-22): contact at  4.0-> 5.0 s (hit/hit), distance 3.0->3.4 m, mean clear 0.99->0.81 m, trigger  32->  0
+  seed 1015 (ProcTHOR-Train-23): contact at  3.3-> 5.3 s (hit/hit), distance 2.5->3.9 m, mean clear 1.39->1.35 m, trigger  -1->  0
+  seed 1016 (ProcTHOR-Train-16): contact at  2.6-> 4.8 s (hit/hit), distance 2.0->3.1 m, mean clear 0.83->0.87 m, trigger  -1->  0
+  seed 1017 (ProcTHOR-Train-17): contact at  4.3-> 3.8 s (hit/hit), distance 3.0->2.8 m, mean clear 1.01->0.99 m, trigger   8->  0
+  seed 1018 (ProcTHOR-Train-18): contact at  3.7-> 4.9 s (hit/hit), distance 2.9->3.4 m, mean clear 0.76->0.93 m, trigger  -1-> 20
+  seed 1019 (ProcTHOR-Train-19): contact at  7.1-> 7.1 s (hit/hit), distance 5.6->5.6 m, mean clear 1.04->1.04 m, trigger  -1-> -1
+  seed 1020 (ProcTHOR-Train-20): contact at  4.4-> 6.2 s (hit/hit), distance 3.4->4.5 m, mean clear 1.34->0.95 m, trigger  -1->  0
+  seed 1021 (ProcTHOR-Train-21): contact at  3.8-> 3.8 s (hit/hit), distance 3.0->3.0 m, mean clear 0.77->0.77 m, trigger  -1-> -1
+  seed 1022 (ProcTHOR-Train-22): contact at  4.1-> 4.2 s (hit/hit), distance 3.0->2.9 m, mean clear 0.92->0.92 m, trigger   8->  0
+  seed 1023 (ProcTHOR-Train-23): contact at  5.2-> 7.5 s (hit/none), distance 4.1->5.7 m, mean clear 1.41->1.47 m, trigger  -1->  0
+  seed 1024 (ProcTHOR-Train-16): contact at  7.1-> 4.2 s (hit/hit), distance 5.5->3.1 m, mean clear 1.01->1.17 m, trigger 104->  0
+  seed 1025 (ProcTHOR-Train-17): contact at  6.0-> 7.5 s (hit/none), distance 4.7->5.6 m, mean clear 1.20->1.30 m, trigger  -1->  0
+  seed 1026 (ProcTHOR-Train-18): contact at  3.1-> 3.6 s (hit/hit), distance 2.4->2.6 m, mean clear 1.06->0.93 m, trigger  -1->  0
+  seed 1027 (ProcTHOR-Train-19): contact at  3.4-> 5.0 s (hit/hit), distance 2.6->3.4 m, mean clear 0.98->1.11 m, trigger  -1-> 16
+  seed 1028 (ProcTHOR-Train-20): contact at  3.0-> 4.4 s (hit/hit), distance 2.3->3.3 m, mean clear 0.84->0.95 m, trigger  -1-> 56
+  seed 1029 (ProcTHOR-Train-21): contact at  3.2-> 3.4 s (hit/hit), distance 2.3->2.5 m, mean clear 1.04->1.02 m, trigger   8-> 28
+  seed 1030 (ProcTHOR-Train-22): contact at  2.9-> 2.9 s (hit/hit), distance 2.2->2.2 m, mean clear 0.95->0.95 m, trigger  -1-> -1
+  seed 1031 (ProcTHOR-Train-23): contact at  4.3-> 7.0 s (hit/hit), distance 3.3->5.2 m, mean clear 0.97->1.00 m, trigger  -1->  0
+  seed 1032 (ProcTHOR-Train-16): contact at  4.5-> 5.0 s (hit/hit), distance 3.3->3.4 m, mean clear 1.00->0.97 m, trigger   0->  0
+  seed 1033 (ProcTHOR-Train-17): contact at  3.6-> 5.2 s (hit/hit), distance 2.7->3.7 m, mean clear 1.27->1.18 m, trigger   0->  0
+  seed 1034 (ProcTHOR-Train-18): contact at  6.3-> 6.3 s (hit/hit), distance 4.9->4.9 m, mean clear 0.91->0.91 m, trigger  -1-> -1
+  seed 1035 (ProcTHOR-Train-19): contact at  4.9-> 4.3 s (hit/hit), distance 3.8->3.2 m, mean clear 1.09->1.01 m, trigger  68->  4
+  seed 1036 (ProcTHOR-Train-20): contact at  4.8-> 7.2 s (hit/hit), distance 3.8->5.0 m, mean clear 1.60->1.78 m, trigger  -1->  0
+  seed 1037 (ProcTHOR-Train-21): contact at  2.7-> 2.7 s (hit/hit), distance 2.1->2.1 m, mean clear 1.01->1.01 m, trigger  -1-> -1
+  seed 1038 (ProcTHOR-Train-22): contact at  7.5-> 7.5 s (none/none), distance 5.3->5.0 m, mean clear 0.96->0.94 m, trigger   8->  8
+  seed 1039 (ProcTHOR-Train-23): contact at  3.1-> 5.9 s (hit/hit), distance 2.4->4.5 m, mean clear 1.15->1.12 m, trigger 140->  0
+  seed 1040 (ProcTHOR-Train-16): contact at  6.1-> 7.5 s (hit/none), distance 4.6->5.0 m, mean clear 1.16->1.27 m, trigger   8-> 12
+  seed 1041 (ProcTHOR-Train-17): contact at  6.1-> 7.0 s (hit/hit), distance 4.1->4.7 m, mean clear 0.96->1.00 m, trigger   0->  0
+  seed 1042 (ProcTHOR-Train-18): contact at  4.4-> 4.4 s (hit/hit), distance 3.4->3.4 m, mean clear 0.90->0.90 m, trigger  -1-> -1
+  seed 1043 (ProcTHOR-Train-19): contact at  3.2-> 4.6 s (hit/hit), distance 2.5->2.9 m, mean clear 0.86->0.96 m, trigger 144->  0
+  seed 1044 (ProcTHOR-Train-20): contact at  3.7-> 5.2 s (hit/hit), distance 2.9->3.8 m, mean clear 1.39->1.44 m, trigger  -1->  0
+  seed 1045 (ProcTHOR-Train-21): contact at  3.6-> 3.6 s (hit/hit), distance 2.8->2.8 m, mean clear 1.00->1.00 m, trigger  -1-> -1
+  seed 1046 (ProcTHOR-Train-22): contact at  3.9-> 2.5 s (hit/hit), distance 3.0->1.6 m, mean clear 0.70->0.83 m, trigger  -1->  0
+  seed 1047 (ProcTHOR-Train-23): contact at  6.3-> 7.5 s (hit/none), distance 5.0->5.8 m, mean clear 1.26->1.65 m, trigger  -1->  0
+  seed 1048 (ProcTHOR-Train-16): contact at  5.1-> 5.7 s (hit/hit), distance 3.6->3.6 m, mean clear 1.24->1.19 m, trigger   0->  0
+  seed 1049 (ProcTHOR-Train-17): contact at  5.2-> 5.9 s (hit/hit), distance 3.8->3.6 m, mean clear 1.32->1.00 m, trigger   0->  0
+  seed 1050 (ProcTHOR-Train-18): contact at  7.5-> 2.9 s (none/hit), distance 5.2->1.9 m, mean clear 1.26->1.10 m, trigger   0->  0
+  seed 1051 (ProcTHOR-Train-19): contact at  3.0-> 3.0 s (hit/hit), distance 2.1->2.0 m, mean clear 0.98->0.92 m, trigger  28->  0
+  seed 1052 (ProcTHOR-Train-20): contact at  5.8-> 6.9 s (hit/hit), distance 4.6->5.1 m, mean clear 1.52->1.54 m, trigger  -1->144
+  seed 1053 (ProcTHOR-Train-21): contact at  3.0-> 3.0 s (hit/hit), distance 2.4->2.4 m, mean clear 0.77->0.77 m, trigger  -1-> -1
+  seed 1054 (ProcTHOR-Train-22): contact at  5.2-> 4.7 s (hit/hit), distance 4.0->3.7 m, mean clear 0.93->1.02 m, trigger  36-> -1
+  seed 1055 (ProcTHOR-Train-23): contact at  5.7-> 3.6 s (hit/hit), distance 4.5->2.7 m, mean clear 1.18->1.15 m, trigger  -1->  0
+  seed 1056 (ProcTHOR-Train-16): contact at  5.7-> 5.7 s (hit/hit), distance 4.5->4.5 m, mean clear 0.88->0.88 m, trigger  -1-> -1
+  seed 1057 (ProcTHOR-Train-17): contact at  3.8-> 4.9 s (hit/hit), distance 3.0->3.5 m, mean clear 0.75->0.80 m, trigger  -1->  4
+  seed 1058 (ProcTHOR-Train-18): contact at  3.6-> 4.1 s (hit/hit), distance 2.8->2.9 m, mean clear 1.28->1.27 m, trigger  -1-> 12
+  seed 1059 (ProcTHOR-Train-19): contact at  2.8-> 2.8 s (hit/hit), distance 2.2->2.2 m, mean clear 0.90->0.90 m, trigger  -1-> -1
+  seed 1060 (ProcTHOR-Train-20): contact at  6.9-> 7.5 s (hit/none), distance 5.4->5.3 m, mean clear 1.42->1.56 m, trigger  -1-> 12
+  seed 1061 (ProcTHOR-Train-21): contact at  3.0-> 3.0 s (hit/hit), distance 2.3->2.3 m, mean clear 0.76->0.76 m, trigger  -1-> -1
+  seed 1062 (ProcTHOR-Train-22): contact at  2.6-> 3.2 s (hit/hit), distance 2.0->2.4 m, mean clear 1.03->0.93 m, trigger  -1->  0
+  seed 1063 (ProcTHOR-Train-23): contact at  4.5-> 7.3 s (hit/hit), distance 3.3->5.4 m, mean clear 1.01->1.14 m, trigger 128->  0
+  seed 1064 (ProcTHOR-Train-16): contact at  6.1-> 7.5 s (hit/none), distance 4.4->5.7 m, mean clear 1.19->1.15 m, trigger   8->  8
+  seed 1065 (ProcTHOR-Train-17): contact at  7.5-> 7.5 s (none/none), distance 5.5->5.6 m, mean clear 1.18->0.98 m, trigger   0->  0
+  seed 1066 (ProcTHOR-Train-18): contact at  3.2-> 4.9 s (hit/hit), distance 2.5->3.3 m, mean clear 1.29->1.35 m, trigger  -1->  8
+  seed 1067 (ProcTHOR-Train-19): contact at  7.1-> 7.5 s (hit/none), distance 5.6->4.8 m, mean clear 1.12->1.00 m, trigger  -1->  0
+  seed 1068 (ProcTHOR-Train-20): contact at  7.5-> 7.5 s (none/none), distance 5.9->5.2 m, mean clear 1.32->1.47 m, trigger  -1->  0
+  seed 1069 (ProcTHOR-Train-21): contact at  2.9-> 2.9 s (hit/hit), distance 2.2->2.2 m, mean clear 0.77->0.77 m, trigger  -1-> -1
+  seed 1070 (ProcTHOR-Train-22): contact at  7.3-> 7.3 s (hit/hit), distance 5.7->5.7 m, mean clear 0.88->0.88 m, trigger  -1-> -1
+  seed 1071 (ProcTHOR-Train-23): contact at  4.0-> 7.2 s (hit/hit), distance 3.1->5.4 m, mean clear 1.05->0.97 m, trigger  -1->  0
+  seed 1072 (ProcTHOR-Train-16): contact at  3.9-> 6.1 s (hit/hit), distance 3.0->4.4 m, mean clear 1.11->1.06 m, trigger  -1->  0
+  seed 1073 (ProcTHOR-Train-17): contact at  3.8-> 5.6 s (hit/hit), distance 3.0->4.1 m, mean clear 1.13->1.21 m, trigger  -1->  0
+  seed 1074 (ProcTHOR-Train-18): contact at  7.3-> 2.2 s (hit/hit), distance 5.3->1.2 m, mean clear 1.20->0.88 m, trigger   0->  8
+  seed 1075 (ProcTHOR-Train-19): contact at  5.0-> 6.4 s (hit/hit), distance 3.9->4.7 m, mean clear 0.86->1.12 m, trigger  -1->  0
+  seed 1076 (ProcTHOR-Train-20): contact at  4.5-> 5.7 s (hit/hit), distance 3.4->4.1 m, mean clear 1.40->1.22 m, trigger  44-> 12
+  seed 1077 (ProcTHOR-Train-21): contact at  4.2-> 4.6 s (hit/hit), distance 3.3->3.5 m, mean clear 0.73->0.78 m, trigger  -1-> 56
+  seed 1078 (ProcTHOR-Train-22): contact at  6.0-> 4.2 s (hit/hit), distance 4.5->3.2 m, mean clear 0.98->1.16 m, trigger 112-> 80
+  seed 1079 (ProcTHOR-Train-23): contact at  6.5-> 7.5 s (hit/none), distance 5.1->5.4 m, mean clear 1.23->1.62 m, trigger  -1->  0
+  seed 1080 (ProcTHOR-Train-16): contact at  3.9-> 4.9 s (hit/hit), distance 3.1->3.6 m, mean clear 1.04->1.03 m, trigger  -1->  0
+  seed 1081 (ProcTHOR-Train-17): contact at  3.0-> 4.2 s (hit/hit), distance 2.3->2.9 m, mean clear 0.82->0.80 m, trigger  -1->  0
+  seed 1082 (ProcTHOR-Train-18): contact at  3.9-> 3.8 s (hit/hit), distance 3.0->2.8 m, mean clear 1.08->1.08 m, trigger  -1-> 88
+  seed 1083 (ProcTHOR-Train-19): contact at  4.1-> 3.9 s (hit/hit), distance 3.2->2.9 m, mean clear 0.99->1.03 m, trigger  -1->128
+  seed 1084 (ProcTHOR-Train-20): contact at  4.4-> 5.8 s (hit/hit), distance 3.4->4.2 m, mean clear 1.34->1.40 m, trigger  -1-> 76
+  seed 1085 (ProcTHOR-Train-21): contact at  2.9-> 2.9 s (hit/hit), distance 2.2->2.2 m, mean clear 0.82->0.82 m, trigger  -1-> -1
+  seed 1086 (ProcTHOR-Train-22): contact at  3.0-> 3.9 s (hit/hit), distance 2.3->2.9 m, mean clear 0.93->0.86 m, trigger  -1->  0
+  seed 1087 (ProcTHOR-Train-23): contact at  4.9-> 3.4 s (hit/hit), distance 3.8->2.5 m, mean clear 0.98->0.94 m, trigger  -1->  0
+  seed 1088 (ProcTHOR-Train-16): contact at  4.8-> 7.5 s (hit/none), distance 3.7->5.0 m, mean clear 1.14->1.14 m, trigger 152->  0
+  seed 1089 (ProcTHOR-Train-17): contact at  5.7-> 6.7 s (hit/hit), distance 4.0->4.4 m, mean clear 1.41->1.23 m, trigger   0->  4
+  seed 1090 (ProcTHOR-Train-18): contact at  3.8-> 3.8 s (hit/hit), distance 3.0->3.0 m, mean clear 0.84->0.84 m, trigger  -1-> -1
+  seed 1091 (ProcTHOR-Train-19): contact at  4.0-> 4.0 s (hit/hit), distance 3.1->3.1 m, mean clear 1.02->1.02 m, trigger  -1-> -1
+  seed 1092 (ProcTHOR-Train-20): contact at  5.4-> 5.1 s (hit/hit), distance 3.8->3.9 m, mean clear 0.99->1.01 m, trigger   0->  0
+  seed 1093 (ProcTHOR-Train-21): contact at  3.5-> 3.5 s (hit/hit), distance 2.7->2.7 m, mean clear 1.01->1.01 m, trigger  -1-> -1
+  seed 1094 (ProcTHOR-Train-22): contact at  7.5-> 3.5 s (none/hit), distance 5.3->2.4 m, mean clear 1.08->0.94 m, trigger   8->  0
+  seed 1095 (ProcTHOR-Train-23): contact at  3.2-> 5.3 s (hit/hit), distance 2.5->4.0 m, mean clear 1.04->0.81 m, trigger  -1->  0
+  seed 1096 (ProcTHOR-Train-16): contact at  3.3-> 4.1 s (hit/hit), distance 2.5->3.0 m, mean clear 0.98->0.83 m, trigger 148->144
+  seed 1097 (ProcTHOR-Train-17): contact at  4.9-> 5.5 s (hit/hit), distance 3.3->3.4 m, mean clear 1.36->1.15 m, trigger   8->  8
+  seed 1098 (ProcTHOR-Train-18): contact at  4.9-> 5.6 s (hit/hit), distance 3.5->3.6 m, mean clear 1.07->0.89 m, trigger   8->  0
+  seed 1099 (ProcTHOR-Train-19): contact at  2.7-> 3.3 s (hit/hit), distance 2.1->2.3 m, mean clear 0.99->0.98 m, trigger  -1-> 60
+  seed 1100 (ProcTHOR-Train-20): contact at  4.7-> 7.2 s (hit/hit), distance 3.7->5.6 m, mean clear 1.59->1.66 m, trigger  -1->  0
+  seed 1101 (ProcTHOR-Train-21): contact at  4.2-> 4.2 s (hit/hit), distance 3.1->3.1 m, mean clear 0.93->0.93 m, trigger  96-> 96
+  seed 1102 (ProcTHOR-Train-22): contact at  4.2-> 5.8 s (hit/hit), distance 3.3->4.4 m, mean clear 0.65->0.71 m, trigger  -1->  0
+  seed 1103 (ProcTHOR-Train-23): contact at  2.7-> 4.9 s (hit/hit), distance 2.1->3.9 m, mean clear 1.11->1.16 m, trigger  -1->  0
+  seed 1104 (ProcTHOR-Train-16): contact at  4.2-> 4.7 s (hit/hit), distance 3.1->3.4 m, mean clear 0.97->1.12 m, trigger 152->  0
+  seed 1105 (ProcTHOR-Train-17): contact at  6.5-> 2.8 s (hit/hit), distance 4.8->1.9 m, mean clear 0.99->0.87 m, trigger   0->  0
+  seed 1106 (ProcTHOR-Train-18): contact at  3.5-> 3.8 s (hit/hit), distance 2.5->2.8 m, mean clear 0.84->1.06 m, trigger 112->  0
+  seed 1107 (ProcTHOR-Train-19): contact at  4.0-> 4.0 s (hit/hit), distance 3.0->3.0 m, mean clear 0.81->0.69 m, trigger  80->152
+  seed 1108 (ProcTHOR-Train-20): contact at  3.2-> 4.8 s (hit/hit), distance 2.5->3.2 m, mean clear 1.35->1.14 m, trigger  -1->  0
+  seed 1109 (ProcTHOR-Train-21): contact at  2.6-> 2.6 s (hit/hit), distance 2.0->2.0 m, mean clear 1.00->1.00 m, trigger  -1-> -1
+  seed 1110 (ProcTHOR-Train-22): contact at  7.5-> 5.6 s (none/hit), distance 5.7->3.4 m, mean clear 1.00->0.94 m, trigger   0->  8
+  seed 1111 (ProcTHOR-Train-23): contact at  4.4-> 5.1 s (hit/hit), distance 3.3->3.8 m, mean clear 0.92->1.01 m, trigger  88->  0
+  seed 1112 (ProcTHOR-Train-16): contact at  3.1-> 3.0 s (hit/hit), distance 2.1->2.1 m, mean clear 1.14->1.13 m, trigger   8->  0
+  seed 1113 (ProcTHOR-Train-17): contact at  3.5-> 4.9 s (hit/hit), distance 2.7->3.4 m, mean clear 1.29->1.44 m, trigger  -1->  0
+  seed 1114 (ProcTHOR-Train-18): contact at  2.9-> 2.9 s (hit/hit), distance 2.3->2.3 m, mean clear 1.29->1.29 m, trigger  -1-> -1
+  seed 1115 (ProcTHOR-Train-19): contact at  5.1-> 4.4 s (hit/hit), distance 3.7->3.4 m, mean clear 1.09->1.00 m, trigger  40->196
+  seed 1116 (ProcTHOR-Train-20): contact at  7.5-> 3.7 s (none/hit), distance 5.7->2.3 m, mean clear 0.94->0.99 m, trigger  40->  0
+  seed 1117 (ProcTHOR-Train-21): contact at  2.6-> 2.6 s (hit/hit), distance 2.0->2.0 m, mean clear 0.94->0.94 m, trigger  -1-> -1
+  seed 1118 (ProcTHOR-Train-22): contact at  3.6-> 4.3 s (hit/hit), distance 2.8->3.1 m, mean clear 0.77->0.92 m, trigger  -1-> 20
+  seed 1119 (ProcTHOR-Train-23): contact at  6.4-> 2.5 s (hit/hit), distance 5.1->1.7 m, mean clear 1.31->0.84 m, trigger  -1->  0
+  seed 1120 (ProcTHOR-Train-16): contact at  5.2-> 4.3 s (hit/hit), distance 4.1->3.1 m, mean clear 1.40->1.22 m, trigger  -1->  0
+  seed 1121 (ProcTHOR-Train-17): contact at  5.5-> 7.5 s (hit/none), distance 4.3->4.9 m, mean clear 0.99->1.22 m, trigger  -1->  0
+  seed 1122 (ProcTHOR-Train-18): contact at  7.5-> 5.6 s (none/hit), distance 6.2->3.9 m, mean clear 1.20->1.07 m, trigger  36->  0
+  seed 1123 (ProcTHOR-Train-19): contact at  3.4-> 3.4 s (hit/hit), distance 2.6->2.6 m, mean clear 0.88->0.88 m, trigger  -1-> -1
+  seed 1124 (ProcTHOR-Train-20): contact at  5.2-> 5.8 s (hit/hit), distance 3.9->4.1 m, mean clear 1.10->1.13 m, trigger   0-> 16
+  seed 1125 (ProcTHOR-Train-21): contact at  2.6-> 3.2 s (hit/hit), distance 2.0->2.3 m, mean clear 1.02->0.95 m, trigger  -1-> 60
+  seed 1126 (ProcTHOR-Train-22): contact at  5.6-> 7.5 s (hit/none), distance 4.4->5.5 m, mean clear 0.88->1.04 m, trigger 260->  0
+  seed 1127 (ProcTHOR-Train-23): contact at  7.4-> 7.5 s (hit/none), distance 5.8->5.8 m, mean clear 1.12->1.17 m, trigger  -1->  0
+  seed 1128 (ProcTHOR-Train-16): contact at  2.9-> 5.6 s (hit/hit), distance 2.2->4.2 m, mean clear 1.13->1.07 m, trigger  -1->  0
+  seed 1129 (ProcTHOR-Train-17): contact at  7.5-> 7.5 s (none/none), distance 5.6->5.2 m, mean clear 1.28->1.01 m, trigger   0->  8
+  seed 1130 (ProcTHOR-Train-18): contact at  7.1-> 7.5 s (hit/none), distance 5.1->5.0 m, mean clear 1.28->1.36 m, trigger   0->  8
+  seed 1131 (ProcTHOR-Train-19): contact at  4.6-> 3.9 s (hit/hit), distance 3.1->3.0 m, mean clear 1.05->0.98 m, trigger  36->172
+  seed 1132 (ProcTHOR-Train-20): contact at  5.2-> 6.2 s (hit/hit), distance 4.1->4.5 m, mean clear 1.20->1.35 m, trigger  -1->  8
+  seed 1133 (ProcTHOR-Train-21): contact at  4.9-> 4.9 s (hit/hit), distance 3.9->3.9 m, mean clear 0.87->0.87 m, trigger  -1-> -1
+  seed 1134 (ProcTHOR-Train-22): contact at  3.8-> 4.3 s (hit/hit), distance 2.9->2.6 m, mean clear 0.93->0.94 m, trigger   8->  0
+  seed 1135 (ProcTHOR-Train-23): contact at  3.4-> 6.1 s (hit/hit), distance 2.6->4.7 m, mean clear 1.41->1.51 m, trigger  -1->  0
+  seed 1136 (ProcTHOR-Train-16): contact at  5.2-> 6.3 s (hit/hit), distance 3.7->4.6 m, mean clear 1.13->0.88 m, trigger 144->  0
+  seed 1137 (ProcTHOR-Train-17): contact at  7.5-> 5.3 s (hit/hit), distance 5.5->4.0 m, mean clear 1.04->0.90 m, trigger   0->  8
+  seed 1138 (ProcTHOR-Train-18): contact at  4.7-> 4.9 s (hit/hit), distance 3.6->3.6 m, mean clear 1.15->1.15 m, trigger   0->  8
+  seed 1139 (ProcTHOR-Train-19): contact at  4.8-> 5.5 s (hit/hit), distance 3.6->3.8 m, mean clear 0.80->1.03 m, trigger 156->  0
+  seed 1140 (ProcTHOR-Train-20): contact at  7.5-> 7.5 s (none/none), distance 5.9->5.9 m, mean clear 1.33->1.36 m, trigger  -1->  0
+  seed 1141 (ProcTHOR-Train-21): contact at  3.9-> 3.9 s (hit/hit), distance 2.9->2.9 m, mean clear 0.76->0.76 m, trigger 128->128
+  seed 1142 (ProcTHOR-Train-22): contact at  7.5-> 5.9 s (none/hit), distance 5.2->3.5 m, mean clear 1.02->0.90 m, trigger   4->  8
+  seed 1143 (ProcTHOR-Train-23): contact at  5.5-> 7.5 s (hit/none), distance 4.1->5.3 m, mean clear 0.99->0.99 m, trigger 180->  0
+  seed 1144 (ProcTHOR-Train-16): contact at  2.9-> 5.8 s (hit/hit), distance 2.3->4.6 m, mean clear 1.13->1.14 m, trigger  -1->  0
+  seed 1145 (ProcTHOR-Train-17): contact at  5.1-> 7.5 s (hit/none), distance 4.0->5.4 m, mean clear 1.28->1.44 m, trigger  -1->  8
+  seed 1146 (ProcTHOR-Train-18): contact at  2.6-> 3.1 s (hit/hit), distance 2.0->2.1 m, mean clear 1.11->1.12 m, trigger  -1-> 12
+  seed 1147 (ProcTHOR-Train-19): contact at  5.6-> 6.5 s (hit/hit), distance 4.3->4.7 m, mean clear 0.83->0.87 m, trigger 120-> 20
+  seed 1148 (ProcTHOR-Train-20): contact at  7.5-> 6.7 s (none/hit), distance 5.6->4.6 m, mean clear 1.48->1.36 m, trigger   0->  0
+  seed 1149 (ProcTHOR-Train-21): contact at  2.8-> 2.8 s (hit/hit), distance 2.2->2.2 m, mean clear 0.75->0.75 m, trigger  -1-> -1
+  seed 1150 (ProcTHOR-Train-22): contact at  7.5-> 6.4 s (none/hit), distance 5.9->4.7 m, mean clear 0.88->0.89 m, trigger  -1->  0
+  seed 1151 (ProcTHOR-Train-23): contact at  7.5-> 7.5 s (none/none), distance 5.9->5.9 m, mean clear 1.47->1.48 m, trigger  -1->  0
+  seed 1152 (ProcTHOR-Train-16): contact at  5.2-> 6.6 s (hit/hit), distance 3.9->4.1 m, mean clear 1.21->0.83 m, trigger   0->  8
+  seed 1153 (ProcTHOR-Train-17): contact at  4.3-> 5.0 s (hit/hit), distance 3.3->3.7 m, mean clear 1.07->1.04 m, trigger  -1->  0
+  seed 1154 (ProcTHOR-Train-18): contact at  4.4-> 2.2 s (hit/hit), distance 3.4->1.3 m, mean clear 0.94->0.93 m, trigger   0->  0
+  seed 1155 (ProcTHOR-Train-19): contact at  3.6-> 5.1 s (hit/hit), distance 2.8->3.7 m, mean clear 0.75->0.85 m, trigger  -1->  0
+  seed 1156 (ProcTHOR-Train-20): contact at  4.1-> 5.5 s (hit/hit), distance 3.1->3.7 m, mean clear 1.40->1.48 m, trigger  60->  0
+  seed 1157 (ProcTHOR-Train-21): contact at  3.3-> 3.1 s (hit/hit), distance 2.4->2.1 m, mean clear 0.86->0.96 m, trigger  88-> 28
+  seed 1158 (ProcTHOR-Train-22): contact at  3.6-> 3.9 s (hit/hit), distance 2.6->2.8 m, mean clear 0.85->0.92 m, trigger   8->  0
+  seed 1159 (ProcTHOR-Train-23): contact at  4.4-> 7.5 s (hit/none), distance 3.4->5.6 m, mean clear 1.41->1.43 m, trigger  -1->  0
+  seed 1160 (ProcTHOR-Train-16): contact at  2.9-> 4.0 s (hit/hit), distance 2.2->2.9 m, mean clear 0.99->1.16 m, trigger  -1->  0
+  seed 1161 (ProcTHOR-Train-17): contact at  5.8-> 7.5 s (hit/none), distance 4.5->5.2 m, mean clear 1.13->1.16 m, trigger  -1-> 20
+  seed 1162 (ProcTHOR-Train-18): contact at  4.7-> 6.2 s (hit/hit), distance 3.7->4.7 m, mean clear 0.95->0.83 m, trigger  -1->196
+  seed 1163 (ProcTHOR-Train-19): contact at  4.0-> 5.9 s (hit/hit), distance 2.9->4.3 m, mean clear 0.93->1.08 m, trigger 136->  0
+  seed 1164 (ProcTHOR-Train-20): contact at  7.5-> 5.0 s (none/hit), distance 5.3->3.8 m, mean clear 1.06->1.17 m, trigger   0->  0
+  seed 1165 (ProcTHOR-Train-21): contact at  3.1-> 3.7 s (hit/hit), distance 2.4->2.7 m, mean clear 1.01->0.91 m, trigger  -1->132
+  seed 1166 (ProcTHOR-Train-22): contact at  4.2-> 4.2 s (hit/hit), distance 3.3->3.3 m, mean clear 0.79->0.79 m, trigger  -1-> -1
+  seed 1167 (ProcTHOR-Train-23): contact at  7.5-> 7.5 s (none/none), distance 5.9->5.5 m, mean clear 1.41->1.63 m, trigger  -1->  0
+  seed 1168 (ProcTHOR-Train-16): contact at  7.5-> 2.9 s (none/hit), distance 5.7->1.9 m, mean clear 0.93->1.05 m, trigger 176->  0
+  seed 1169 (ProcTHOR-Train-17): contact at  6.6-> 3.6 s (hit/hit), distance 4.5->2.5 m, mean clear 1.15->0.68 m, trigger   0->  0
+  seed 1170 (ProcTHOR-Train-18): contact at  5.6-> 6.7 s (hit/hit), distance 4.4->4.9 m, mean clear 0.74->0.62 m, trigger  -1->  0
+  seed 1171 (ProcTHOR-Train-19): contact at  2.7-> 2.8 s (hit/hit), distance 2.1->2.0 m, mean clear 0.80->0.94 m, trigger  -1->  0
+  seed 1172 (ProcTHOR-Train-20): contact at  3.5-> 4.2 s (hit/hit), distance 2.7->3.1 m, mean clear 1.19->1.15 m, trigger  -1->100
+  seed 1173 (ProcTHOR-Train-21): contact at  3.1-> 3.1 s (hit/hit), distance 2.4->2.4 m, mean clear 0.89->0.89 m, trigger  -1-> -1
+  seed 1174 (ProcTHOR-Train-22): contact at  3.9-> 5.6 s (hit/hit), distance 3.0->4.1 m, mean clear 1.02->1.03 m, trigger  -1-> 12
+  seed 1175 (ProcTHOR-Train-23): contact at  5.4-> 7.5 s (hit/none), distance 4.2->5.6 m, mean clear 1.29->1.30 m, trigger  -1->  0
+  seed 1176 (ProcTHOR-Train-16): contact at  2.8-> 5.0 s (hit/hit), distance 2.2->3.5 m, mean clear 0.97->1.02 m, trigger  -1->  0
+  seed 1177 (ProcTHOR-Train-17): contact at  2.9-> 5.5 s (hit/hit), distance 2.2->3.8 m, mean clear 1.12->1.19 m, trigger  -1->  0
+  seed 1178 (ProcTHOR-Train-18): contact at  7.5-> 7.5 s (none/none), distance 5.6->5.3 m, mean clear 1.01->1.01 m, trigger   0->  0
+  seed 1179 (ProcTHOR-Train-19): contact at  6.1-> 6.1 s (hit/hit), distance 4.8->4.8 m, mean clear 1.06->1.06 m, trigger  -1-> -1
+  seed 1180 (ProcTHOR-Train-20): contact at  5.0-> 6.8 s (hit/hit), distance 3.9->4.9 m, mean clear 1.61->1.70 m, trigger  -1->  0
+  seed 1181 (ProcTHOR-Train-21): contact at  4.1-> 2.9 s (hit/hit), distance 3.0->2.0 m, mean clear 0.78->0.89 m, trigger 116-> 32
+  seed 1182 (ProcTHOR-Train-22): contact at  4.1-> 5.5 s (hit/hit), distance 3.1->3.9 m, mean clear 0.92->0.99 m, trigger  72->  0
+  seed 1183 (ProcTHOR-Train-23): contact at  4.4-> 6.8 s (hit/hit), distance 3.3->5.0 m, mean clear 1.21->1.23 m, trigger 128->  0
+  seed 1184 (ProcTHOR-Train-16): contact at  4.8-> 4.6 s (hit/hit), distance 3.5->3.3 m, mean clear 0.92->1.12 m, trigger   8->  0
+  seed 1185 (ProcTHOR-Train-17): contact at  3.0-> 5.4 s (hit/hit), distance 2.3->3.7 m, mean clear 1.22->1.22 m, trigger  -1->  0
+  seed 1186 (ProcTHOR-Train-18): contact at  4.3-> 4.3 s (hit/hit), distance 3.4->3.4 m, mean clear 0.87->0.87 m, trigger  -1-> -1
+  seed 1187 (ProcTHOR-Train-19): contact at  2.8-> 2.8 s (hit/hit), distance 2.1->2.1 m, mean clear 1.01->1.01 m, trigger  -1-> -1
+  seed 1188 (ProcTHOR-Train-20): contact at  7.5-> 7.5 s (none/none), distance 5.3->5.5 m, mean clear 1.73->1.06 m, trigger   0->  0
+  seed 1189 (ProcTHOR-Train-21): contact at  2.8-> 2.8 s (hit/hit), distance 2.2->2.2 m, mean clear 1.01->1.01 m, trigger  -1-> -1
+  seed 1190 (ProcTHOR-Train-22): contact at  5.6-> 6.4 s (hit/hit), distance 4.2->4.9 m, mean clear 0.70->0.78 m, trigger   8->  0
+  seed 1191 (ProcTHOR-Train-23): contact at  4.8-> 7.5 s (hit/none), distance 3.7->5.6 m, mean clear 0.91->0.98 m, trigger  -1->  0
+  seed 1192 (ProcTHOR-Train-16): contact at  5.0-> 7.5 s (hit/none), distance 3.7->4.7 m, mean clear 1.17->1.09 m, trigger   8->  0
+  seed 1193 (ProcTHOR-Train-17): contact at  3.5-> 5.9 s (hit/hit), distance 2.8->4.2 m, mean clear 0.94->1.06 m, trigger  -1->  0
+  seed 1194 (ProcTHOR-Train-18): contact at  4.0-> 4.0 s (hit/hit), distance 2.9->2.9 m, mean clear 1.29->1.29 m, trigger   8->  8
+  seed 1195 (ProcTHOR-Train-19): contact at  7.5-> 7.1 s (none/hit), distance 5.8->5.4 m, mean clear 0.89->0.92 m, trigger 112->  0
+  seed 1196 (ProcTHOR-Train-20): contact at  7.5-> 7.5 s (none/none), distance 5.2->5.5 m, mean clear 1.58->1.43 m, trigger   0->  0
+  seed 1197 (ProcTHOR-Train-21): contact at  3.0-> 3.0 s (hit/hit), distance 2.3->2.3 m, mean clear 0.69->0.69 m, trigger  -1-> -1
+  seed 1198 (ProcTHOR-Train-22): contact at  2.6-> 3.3 s (hit/hit), distance 2.0->2.3 m, mean clear 0.91->0.97 m, trigger  -1-> 16
+  seed 1199 (ProcTHOR-Train-23): contact at  5.2-> 7.5 s (hit/none), distance 3.7->5.5 m, mean clear 0.96->1.28 m, trigger 132->  0
+  seed 1200 (ProcTHOR-Train-16): contact at  2.8-> 5.0 s (hit/hit), distance 2.2->3.6 m, mean clear 1.08->1.15 m, trigger  -1->  0
+  seed 1201 (ProcTHOR-Train-17): contact at  7.5-> 5.0 s (none/hit), distance 5.9->3.6 m, mean clear 1.06->0.94 m, trigger   0->  0
+  seed 1202 (ProcTHOR-Train-18): contact at  4.7-> 4.0 s (hit/hit), distance 3.5->3.1 m, mean clear 0.99->1.10 m, trigger 172-> -1
+  seed 1203 (ProcTHOR-Train-19): contact at  2.6-> 2.6 s (hit/hit), distance 2.0->2.0 m, mean clear 0.74->0.74 m, trigger  -1-> -1
+  seed 1204 (ProcTHOR-Train-20): contact at  5.8-> 7.5 s (hit/none), distance 4.5->5.2 m, mean clear 1.09->1.64 m, trigger  -1->  8
+  seed 1205 (ProcTHOR-Train-21): contact at  2.7-> 2.7 s (hit/hit), distance 2.1->2.1 m, mean clear 0.88->0.88 m, trigger  -1-> -1
+  seed 1206 (ProcTHOR-Train-22): contact at  3.6-> 3.6 s (hit/hit), distance 2.7->2.7 m, mean clear 1.01->1.01 m, trigger  88-> 88
+  seed 1207 (ProcTHOR-Train-23): contact at  2.8-> 4.9 s (hit/hit), distance 2.2->3.6 m, mean clear 1.26->1.19 m, trigger  -1->  0
+  seed 1208 (ProcTHOR-Train-16): contact at  6.4-> 2.9 s (hit/hit), distance 4.9->1.9 m, mean clear 0.84->0.84 m, trigger 184->  0
+  seed 1209 (ProcTHOR-Train-17): contact at  3.7-> 5.5 s (hit/hit), distance 2.9->3.7 m, mean clear 0.91->1.04 m, trigger  -1->  0
+  seed 1210 (ProcTHOR-Train-18): contact at  6.3-> 4.0 s (hit/hit), distance 4.6->2.6 m, mean clear 1.08->1.14 m, trigger   0->  0
+  seed 1211 (ProcTHOR-Train-19): contact at  7.0-> 6.0 s (hit/hit), distance 5.4->4.3 m, mean clear 0.91->1.12 m, trigger 112-> 48
+  seed 1212 (ProcTHOR-Train-20): contact at  3.4-> 4.4 s (hit/hit), distance 2.7->3.1 m, mean clear 1.18->1.24 m, trigger  -1->  0
+  seed 1213 (ProcTHOR-Train-21): contact at  2.6-> 2.6 s (hit/hit), distance 2.0->2.0 m, mean clear 0.98->0.98 m, trigger  -1-> -1
+  seed 1214 (ProcTHOR-Train-22): contact at  3.7-> 4.5 s (hit/hit), distance 2.7->3.1 m, mean clear 1.02->0.99 m, trigger  16->  8
+  seed 1215 (ProcTHOR-Train-23): contact at  7.5-> 7.5 s (none/none), distance 5.9->5.7 m, mean clear 1.37->1.62 m, trigger  -1->  0
+  seed 1216 (ProcTHOR-Train-16): contact at  3.6-> 4.2 s (hit/hit), distance 2.5->3.1 m, mean clear 0.88->1.03 m, trigger   8->  0
+  seed 1217 (ProcTHOR-Train-17): contact at  6.4-> 7.5 s (hit/none), distance 4.9->4.8 m, mean clear 1.19->1.35 m, trigger 164->  0
+  seed 1218 (ProcTHOR-Train-18): contact at  3.4-> 3.4 s (hit/hit), distance 2.6->2.6 m, mean clear 0.77->0.77 m, trigger 160-> -1
+  seed 1219 (ProcTHOR-Train-19): contact at  6.1-> 6.5 s (hit/hit), distance 4.6->4.7 m, mean clear 0.90->0.95 m, trigger 224->  0
+  seed 1220 (ProcTHOR-Train-20): contact at  3.5-> 3.0 s (hit/hit), distance 2.5->1.9 m, mean clear 0.77->0.96 m, trigger 112-> 16
+  seed 1221 (ProcTHOR-Train-21): contact at  3.4-> 3.4 s (hit/hit), distance 2.6->2.6 m, mean clear 0.81->0.81 m, trigger 148->148
+  seed 1222 (ProcTHOR-Train-22): contact at  2.9-> 3.9 s (hit/hit), distance 2.2->2.6 m, mean clear 0.84->0.82 m, trigger 136->  8
+  seed 1223 (ProcTHOR-Train-23): contact at  2.6-> 3.7 s (hit/hit), distance 2.0->2.7 m, mean clear 1.07->1.21 m, trigger  -1->  0
+  seed 1224 (ProcTHOR-Train-16): contact at  7.2-> 7.5 s (hit/none), distance 5.6->4.4 m, mean clear 0.97->0.85 m, trigger 140->  0
+  seed 1225 (ProcTHOR-Train-17): contact at  6.0-> 6.1 s (hit/hit), distance 4.6->4.6 m, mean clear 0.75->0.90 m, trigger 132->  0
+  seed 1226 (ProcTHOR-Train-18): contact at  4.1-> 4.9 s (hit/hit), distance 3.1->3.6 m, mean clear 1.15->1.32 m, trigger 104->  8
+  seed 1227 (ProcTHOR-Train-19): contact at  5.3-> 5.8 s (hit/hit), distance 4.1->4.2 m, mean clear 1.10->1.23 m, trigger  72->  0
+  seed 1228 (ProcTHOR-Train-20): contact at  4.4-> 6.3 s (hit/hit), distance 3.5->4.5 m, mean clear 1.30->1.42 m, trigger  -1->  0
+  seed 1229 (ProcTHOR-Train-21): contact at  3.3-> 3.3 s (hit/hit), distance 2.6->2.6 m, mean clear 0.97->0.97 m, trigger  -1-> -1
+  seed 1230 (ProcTHOR-Train-22): contact at  7.2-> 2.4 s (hit/hit), distance 5.1->1.3 m, mean clear 0.97->0.88 m, trigger   8->  0
+  seed 1231 (ProcTHOR-Train-23): contact at  5.7-> 7.5 s (hit/none), distance 4.4->5.5 m, mean clear 1.36->0.91 m, trigger 200->  0
+  seed 1232 (ProcTHOR-Train-16): contact at  4.3-> 4.3 s (hit/hit), distance 3.4->3.4 m, mean clear 1.08->1.08 m, trigger  -1-> -1
+  seed 1233 (ProcTHOR-Train-17): contact at  2.6-> 4.9 s (hit/hit), distance 2.0->3.7 m, mean clear 1.11->1.19 m, trigger  -1->  0
+  seed 1234 (ProcTHOR-Train-18): contact at  7.5-> 7.4 s (none/hit), distance 5.6->5.8 m, mean clear 0.96->0.95 m, trigger 196-> 84
+  seed 1235 (ProcTHOR-Train-19): contact at  3.1-> 4.2 s (hit/hit), distance 2.4->3.0 m, mean clear 1.00->0.92 m, trigger  -1-> 36
+  seed 1236 (ProcTHOR-Train-20): contact at  4.5-> 5.0 s (hit/hit), distance 3.5->3.6 m, mean clear 1.14->1.04 m, trigger  -1-> 12
+  seed 1237 (ProcTHOR-Train-21): contact at  3.3-> 4.0 s (hit/hit), distance 2.6->3.0 m, mean clear 1.05->1.13 m, trigger  -1-> 36
+  seed 1238 (ProcTHOR-Train-22): contact at  7.5-> 7.5 s (none/none), distance 5.9->5.6 m, mean clear 1.10->1.02 m, trigger  -1->  0
+  seed 1239 (ProcTHOR-Train-23): contact at  4.4-> 7.3 s (hit/hit), distance 3.4->5.7 m, mean clear 1.20->1.11 m, trigger  -1->  0
+  seed 1240 (ProcTHOR-Train-16): contact at  3.8-> 4.0 s (hit/hit), distance 2.9->2.9 m, mean clear 0.81->1.02 m, trigger  56-> 16
+  seed 1241 (ProcTHOR-Train-17): contact at  3.2-> 3.8 s (hit/hit), distance 2.5->2.7 m, mean clear 0.89->0.79 m, trigger  -1-> 16
+  seed 1242 (ProcTHOR-Train-18): contact at  3.5-> 3.9 s (hit/hit), distance 2.7->2.8 m, mean clear 1.21->1.19 m, trigger  -1-> 16
+  seed 1243 (ProcTHOR-Train-19): contact at  2.8-> 2.8 s (hit/hit), distance 2.1->2.1 m, mean clear 0.97->0.97 m, trigger  -1-> -1
+  seed 1244 (ProcTHOR-Train-20): contact at  7.5-> 3.9 s (none/hit), distance 5.6->2.8 m, mean clear 0.88->1.11 m, trigger 124-> 52
+  seed 1245 (ProcTHOR-Train-21): contact at  3.7-> 3.7 s (hit/hit), distance 2.9->2.9 m, mean clear 0.86->0.86 m, trigger  -1-> -1
+  seed 1246 (ProcTHOR-Train-22): contact at  2.8-> 7.5 s (hit/none), distance 2.2->5.1 m, mean clear 1.13->1.15 m, trigger 132-> 16
+  seed 1247 (ProcTHOR-Train-23): contact at  6.4-> 6.2 s (hit/hit), distance 5.1->4.4 m, mean clear 1.38->1.58 m, trigger  -1->  0
+  seed 1248 (ProcTHOR-Train-16): contact at  4.0-> 5.2 s (hit/hit), distance 3.1->3.7 m, mean clear 1.05->1.05 m, trigger  -1->  8
+  seed 1249 (ProcTHOR-Train-17): contact at  4.0-> 4.8 s (hit/hit), distance 2.9->3.2 m, mean clear 1.32->0.88 m, trigger   0->  4
+  seed 1250 (ProcTHOR-Train-18): contact at  5.1-> 4.3 s (hit/hit), distance 3.5->3.2 m, mean clear 1.07->1.20 m, trigger   8->  0
+  seed 1251 (ProcTHOR-Train-19): contact at  2.8-> 4.9 s (hit/hit), distance 2.2->3.5 m, mean clear 0.77->0.82 m, trigger  -1->  4
+  seed 1252 (ProcTHOR-Train-20): contact at  3.0-> 3.4 s (hit/hit), distance 2.3->2.4 m, mean clear 1.24->1.34 m, trigger  -1-> 12
+  seed 1253 (ProcTHOR-Train-21): contact at  3.8-> 4.2 s (hit/hit), distance 2.8->3.1 m, mean clear 0.81->0.76 m, trigger 112->112
+  seed 1254 (ProcTHOR-Train-22): contact at  6.4-> 7.5 s (hit/none), distance 5.1->5.3 m, mean clear 0.83->1.03 m, trigger  -1-> 20
+  seed 1255 (ProcTHOR-Train-23): contact at  3.1-> 5.5 s (hit/hit), distance 2.4->4.0 m, mean clear 1.37->1.34 m, trigger  -1->  0
+  seed 1256 (ProcTHOR-Train-16): contact at  6.9-> 7.5 s (hit/none), distance 5.5->5.3 m, mean clear 1.00->1.35 m, trigger  -1->  0
+  seed 1257 (ProcTHOR-Train-17): contact at  7.5-> 5.6 s (none/hit), distance 4.7->3.5 m, mean clear 1.19->0.75 m, trigger   8->  4
+  seed 1258 (ProcTHOR-Train-18): contact at  3.4-> 4.0 s (hit/hit), distance 2.7->2.9 m, mean clear 0.78->0.96 m, trigger  -1-> 16
+  seed 1259 (ProcTHOR-Train-19): contact at  5.9-> 7.5 s (hit/none), distance 4.6->5.3 m, mean clear 0.92->1.02 m, trigger  -1-> 12
+  seed 1260 (ProcTHOR-Train-20): contact at  7.5-> 7.5 s (none/none), distance 5.9->5.8 m, mean clear 1.58->1.71 m, trigger  -1->100
+  seed 1261 (ProcTHOR-Train-21): contact at  4.3-> 4.7 s (hit/hit), distance 3.4->3.6 m, mean clear 0.71->0.84 m, trigger  -1-> 60
+  seed 1262 (ProcTHOR-Train-22): contact at  3.8-> 5.3 s (hit/hit), distance 2.7->3.7 m, mean clear 0.99->0.92 m, trigger   0->  8
+  seed 1263 (ProcTHOR-Train-23): contact at  4.2-> 6.0 s (hit/hit), distance 3.0->4.2 m, mean clear 0.92->1.05 m, trigger  64->  0
+  seed 1264 (ProcTHOR-Train-16): contact at  7.5-> 2.3 s (none/hit), distance 5.3->1.4 m, mean clear 1.29->0.82 m, trigger   0->  0
+  seed 1265 (ProcTHOR-Train-17): contact at  3.0-> 4.2 s (hit/hit), distance 2.3->3.0 m, mean clear 1.03->1.13 m, trigger  -1->  4
+  seed 1266 (ProcTHOR-Train-18): contact at  7.5-> 7.5 s (none/none), distance 5.8->5.9 m, mean clear 1.00->0.97 m, trigger 140-> -1
+  seed 1267 (ProcTHOR-Train-19): contact at  7.5-> 7.5 s (none/none), distance 5.9->5.7 m, mean clear 1.16->1.09 m, trigger  -1->136
+  seed 1268 (ProcTHOR-Train-20): contact at  7.5-> 5.2 s (none/hit), distance 5.3->3.8 m, mean clear 1.14->1.36 m, trigger 104->  0
+  seed 1269 (ProcTHOR-Train-21): contact at  3.1-> 3.1 s (hit/hit), distance 2.4->2.4 m, mean clear 0.85->0.85 m, trigger  -1-> -1
+  seed 1270 (ProcTHOR-Train-22): contact at  6.4-> 7.5 s (hit/none), distance 5.0->5.2 m, mean clear 0.78->0.81 m, trigger 300-> 16
+  seed 1271 (ProcTHOR-Train-23): contact at  4.3-> 7.4 s (hit/hit), distance 3.4->5.5 m, mean clear 1.44->1.55 m, trigger  -1->  0
+  seed 1272 (ProcTHOR-Train-16): contact at  2.8-> 4.0 s (hit/hit), distance 2.2->2.6 m, mean clear 0.94->1.00 m, trigger  -1->  0
+  seed 1273 (ProcTHOR-Train-17): contact at  4.5-> 5.8 s (hit/hit), distance 3.1->4.1 m, mean clear 1.07->1.08 m, trigger   0->  0
+  seed 1274 (ProcTHOR-Train-18): contact at  3.6-> 3.9 s (hit/hit), distance 2.5->2.6 m, mean clear 1.25->1.29 m, trigger   0->  8
+  seed 1275 (ProcTHOR-Train-19): contact at  5.5-> 7.4 s (hit/hit), distance 4.2->5.6 m, mean clear 0.95->0.86 m, trigger  96->  0
+  seed 1276 (ProcTHOR-Train-20): contact at  7.5-> 5.1 s (none/hit), distance 5.3->3.7 m, mean clear 1.12->1.18 m, trigger   0-> 28
+  seed 1277 (ProcTHOR-Train-21): contact at  2.8-> 2.8 s (hit/hit), distance 2.1->2.1 m, mean clear 0.70->0.70 m, trigger  -1-> -1
+  seed 1278 (ProcTHOR-Train-22): contact at  5.1-> 6.3 s (hit/hit), distance 3.5->4.5 m, mean clear 1.07->0.78 m, trigger   0->  8
+  seed 1279 (ProcTHOR-Train-23): contact at  3.3-> 5.8 s (hit/hit), distance 2.6->4.3 m, mean clear 0.91->0.91 m, trigger  -1->  0
+  seed 1280 (ProcTHOR-Train-16): contact at  6.3-> 7.3 s (hit/hit), distance 5.0->4.6 m, mean clear 0.83->0.96 m, trigger  -1->  0
+  seed 1281 (ProcTHOR-Train-17): contact at  3.6-> 5.6 s (hit/hit), distance 2.8->4.1 m, mean clear 1.11->1.21 m, trigger  -1->  0
+  seed 1282 (ProcTHOR-Train-18): contact at  3.1-> 3.8 s (hit/hit), distance 2.4->2.7 m, mean clear 1.16->1.28 m, trigger  -1-> 28
+  seed 1283 (ProcTHOR-Train-19): contact at  5.3-> 6.4 s (hit/hit), distance 4.2->4.8 m, mean clear 0.90->1.01 m, trigger  -1-> 52
+  seed 1284 (ProcTHOR-Train-20): contact at  7.1-> 5.6 s (hit/hit), distance 5.2->4.0 m, mean clear 1.44->1.43 m, trigger   0->  0
+  seed 1285 (ProcTHOR-Train-21): contact at  3.3-> 3.3 s (hit/hit), distance 2.6->2.6 m, mean clear 1.00->1.00 m, trigger  -1-> -1
+  seed 1286 (ProcTHOR-Train-22): contact at  2.7-> 3.1 s (hit/hit), distance 2.1->2.2 m, mean clear 0.80->0.77 m, trigger  -1-> 12
+  seed 1287 (ProcTHOR-Train-23): contact at  2.7-> 4.7 s (hit/hit), distance 2.1->3.8 m, mean clear 1.15->1.19 m, trigger  -1->  0
+  seed 1288 (ProcTHOR-Train-16): contact at  4.8-> 7.5 s (hit/none), distance 3.6->5.8 m, mean clear 1.20->1.31 m, trigger 176->  0
+  seed 1289 (ProcTHOR-Train-17): contact at  4.6-> 5.7 s (hit/hit), distance 3.6->4.2 m, mean clear 1.09->1.13 m, trigger  -1->  0
+  seed 1290 (ProcTHOR-Train-18): contact at  3.6-> 3.6 s (hit/hit), distance 2.8->2.8 m, mean clear 0.97->0.97 m, trigger  -1-> -1
+  seed 1291 (ProcTHOR-Train-19): contact at  4.8-> 2.6 s (hit/hit), distance 3.7->1.7 m, mean clear 0.84->0.72 m, trigger  36-> 32
+  seed 1292 (ProcTHOR-Train-20): contact at  2.8-> 6.5 s (hit/hit), distance 2.2->4.8 m, mean clear 1.19->1.08 m, trigger  -1->  8
+  seed 1293 (ProcTHOR-Train-21): contact at  2.7-> 2.7 s (hit/hit), distance 2.1->2.1 m, mean clear 0.96->0.96 m, trigger  -1-> -1
+  seed 1294 (ProcTHOR-Train-22): contact at  6.0-> 5.5 s (hit/hit), distance 4.2->4.1 m, mean clear 0.95->0.83 m, trigger   8->  0
+  seed 1295 (ProcTHOR-Train-23): contact at  4.6-> 7.5 s (hit/none), distance 3.6->5.5 m, mean clear 1.07->1.12 m, trigger  -1->  0
+  seed 1296 (ProcTHOR-Train-16): contact at  4.8-> 6.0 s (hit/hit), distance 3.5->4.4 m, mean clear 1.27->1.00 m, trigger   0->  0
+  seed 1297 (ProcTHOR-Train-17): contact at  3.5-> 5.2 s (hit/hit), distance 2.7->3.8 m, mean clear 1.17->1.19 m, trigger  -1->  0
+  seed 1298 (ProcTHOR-Train-18): contact at  7.5-> 6.7 s (none/hit), distance 5.6->5.4 m, mean clear 1.12->1.31 m, trigger  68->  0
+  seed 1299 (ProcTHOR-Train-19): contact at  7.5-> 7.5 s (none/none), distance 5.8->5.4 m, mean clear 0.87->0.88 m, trigger 100-> 48
+ROOMS OK: starts=300 [hyperdrone/rooms 16-23, 86s]
+  survival (no contact in 7.5 s): reactive 12% -> wm 17%
+  time to first contact (contacted runs): reactive 4.3 s -> wm 4.7 s
+  mean flight time:    reactive 4.7 s -> wm 5.2 s
+  mean distance flown: reactive 3.56 m -> wm 3.73 m
+  mean clearance:      reactive 1.05 m -> wm 1.06 m
+  evaded at least once: reactive 43% -> wm 84%

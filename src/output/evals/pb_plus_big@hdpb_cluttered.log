@@ -1,0 +1,307 @@
+[INFO] checkpoint src/output/world_model_pb_plus_big.pth: trained on hyperdrone+pybullet, camera 60 deg; hyperdrone arena style pybullet
+  seed 1000 (in-path): clear 0.33->0.25 m, trigger  68-> 52, crash 0/0
+  seed 1001 (in-path): clear 0.35->0.30 m, trigger  52-> 36, crash 0/0
+  seed 1002 (in-path): clear 0.27->0.10 m, trigger  72-> 48, crash 0/1
+  seed 1003 (in-path): clear 0.32->0.34 m, trigger  56-> 40, crash 0/0
+  seed 1004 (in-path): clear 0.43->0.39 m, trigger  52-> 32, crash 0/0
+  seed 1005 (in-path): clear 0.37->0.29 m, trigger  88-> 64, crash 0/0
+  seed 1006 (in-path): clear 0.45->0.22 m, trigger  64-> 52, crash 0/0
+  seed 1007 (clear  ): clear 1.89->1.31 m, trigger  36-> 36, crash 0/0
+  seed 1008 (clear  ): clear 0.99->0.64 m, trigger  64-> 64, crash 0/0
+  seed 1009 (clear  ): clear 0.72->0.61 m, trigger  64-> 36, crash 0/0
+  seed 1010 (in-path): clear 0.18->0.22 m, trigger 104-> 48, crash 1/0
+  seed 1011 (in-path): clear 0.45->0.16 m, trigger  68-> 44, crash 0/1
+  seed 1012 (in-path): clear 0.41->0.28 m, trigger  80-> 56, crash 0/0
+  seed 1013 (in-path): clear 0.37->0.31 m, trigger  52-> 36, crash 0/0
+  seed 1014 (in-path): clear 0.17->0.14 m, trigger 104-> 48, crash 1/1
+  seed 1015 (in-path): clear 0.34->0.30 m, trigger  76-> 52, crash 0/0
+  seed 1016 (in-path): clear 0.37->0.23 m, trigger  64-> 48, crash 0/0
+  seed 1017 (clear  ): clear 0.88->0.92 m, trigger  36-> 20, crash 0/0
+  seed 1018 (clear  ): clear 1.03->0.63 m, trigger  20-> 36, crash 0/0
+  seed 1019 (clear  ): clear 0.89->0.92 m, trigger  12-> 12, crash 0/0
+  seed 1020 (in-path): clear 0.47->0.17 m, trigger  56-> 44, crash 0/1
+  seed 1021 (in-path): clear 0.21->0.28 m, trigger  -1-> 28, crash 1/0
+  seed 1022 (in-path): clear 0.39->0.29 m, trigger  84-> 64, crash 0/0
+  seed 1023 (in-path): clear 0.18->0.22 m, trigger 120-> 60, crash 1/0
+  seed 1024 (in-path): clear 0.25->0.53 m, trigger  60-> 40, crash 0/0
+  seed 1025 (in-path): clear 0.44->0.45 m, trigger  72-> 44, crash 0/0
+  seed 1026 (in-path): clear 0.42->0.42 m, trigger  72-> 44, crash 0/0
+  seed 1027 (clear  ): clear 0.75->0.86 m, trigger  36-> 20, crash 0/0
+  seed 1028 (clear  ): clear 1.12->0.91 m, trigger  36-> 36, crash 0/0
+  seed 1029 (clear  ): clear 0.83->0.55 m, trigger  64-> 64, crash 0/0
+  seed 1030 (in-path): clear 0.15->0.12 m, trigger  72-> 28, crash 1/1
+  seed 1031 (in-path): clear 0.32->0.13 m, trigger  92-> 68, crash 0/1
+  seed 1032 (in-path): clear 0.21->0.26 m, trigger  92-> 32, crash 1/0
+  seed 1033 (in-path): clear 0.18->0.21 m, trigger  -1-> 60, crash 1/1
+  seed 1034 (in-path): clear 0.46->0.59 m, trigger  52-> 36, crash 0/0
+  seed 1035 (in-path): clear 0.16->0.10 m, trigger  84-> 48, crash 1/1
+  seed 1036 (in-path): clear 0.34->0.20 m, trigger  76-> 60, crash 0/1
+  seed 1037 (clear  ): clear 1.14->1.07 m, trigger  12-> 12, crash 0/0
+  seed 1038 (clear  ): clear 0.73->0.96 m, trigger  12-> 12, crash 0/0
+  seed 1039 (clear  ): clear 1.03->0.97 m, trigger  20-> 12, crash 0/0
+  seed 1040 (in-path): clear 0.40->0.10 m, trigger  80-> 60, crash 0/1
+  seed 1041 (in-path): clear 0.16->0.22 m, trigger  96-> 44, crash 1/0
+  seed 1042 (in-path): clear 0.30->0.51 m, trigger  60-> 40, crash 0/0
+  seed 1043 (in-path): clear 0.37->0.38 m, trigger  52-> 44, crash 0/0
+  seed 1044 (in-path): clear 0.41->0.35 m, trigger  84-> 56, crash 0/0
+  seed 1045 (in-path): clear 0.34->0.22 m, trigger  64-> 44, crash 0/1
+  seed 1046 (in-path): clear 0.35->0.35 m, trigger  84-> 60, crash 0/0
+  seed 1047 (clear  ): clear 0.94->0.83 m, trigger  64-> 64, crash 0/0
+  seed 1048 (clear  ): clear 1.15->0.93 m, trigger  64-> 64, crash 0/0
+  seed 1049 (clear  ): clear 1.12->0.93 m, trigger  64-> 36, crash 0/0
+  seed 1050 (in-path): clear 0.21->0.27 m, trigger  -1-> 32, crash 1/0
+  seed 1051 (in-path): clear 0.40->0.01 m, trigger  56-> 28, crash 0/1
+  seed 1052 (in-path): clear 0.31->0.37 m, trigger  64-> 48, crash 0/0
+  seed 1053 (in-path): clear 0.14->0.15 m, trigger  88-> 44, crash 1/1
+  seed 1054 (in-path): clear 0.32->0.19 m, trigger  80-> 60, crash 0/1
+  seed 1055 (in-path): clear 0.35->0.21 m, trigger  48-> 36, crash 0/1
+  seed 1056 (in-path): clear 0.38->0.03 m, trigger  52-> 28, crash 0/1
+  seed 1057 (clear  ): clear 0.83->0.69 m, trigger  64-> 64, crash 0/0
+  seed 1058 (clear  ): clear 0.92->0.52 m, trigger  36-> 20, crash 0/0
+  seed 1059 (clear  ): clear 0.90->0.89 m, trigger  12-> 12, crash 0/0
+  seed 1060 (in-path): clear 0.18->0.17 m, trigger  -1-> 32, crash 1/1
+  seed 1061 (in-path): clear 0.43->0.20 m, trigger  64-> 48, crash 0/1
+  seed 1062 (in-path): clear 0.14->0.31 m, trigger  76-> 40, crash 1/0
+  seed 1063 (in-path): clear 0.41->0.31 m, trigger  80-> 60, crash 0/0
+  seed 1064 (in-path): clear 0.37->0.47 m, trigger  68-> 36, crash 0/0
+  seed 1065 (in-path): clear 0.15->0.14 m, trigger  84-> 36, crash 1/1
+  seed 1066 (in-path): clear 0.41->0.22 m, trigger  76-> 56, crash 0/1
+  seed 1067 (clear  ): clear 0.89->0.52 m, trigger  -1-> 80, crash 0/0
+  seed 1068 (clear  ): clear 0.99->0.46 m, trigger  64-> 64, crash 0/0
+  seed 1069 (clear  ): clear 0.71->0.67 m, trigger  64-> 64, crash 0/0
+  seed 1070 (in-path): clear 0.44->0.40 m, trigger  88-> 60, crash 0/0
+  seed 1071 (in-path): clear 0.41->0.21 m, trigger  84-> 60, crash 0/1
+  seed 1072 (in-path): clear 0.17->0.20 m, trigger 108-> 52, crash 1/1
+  seed 1073 (in-path): clear 0.40->0.29 m, trigger  84-> 64, crash 0/0
+  seed 1074 (in-path): clear 0.21->0.26 m, trigger  -1-> 40, crash 1/0
+  seed 1075 (in-path): clear 0.43->0.40 m, trigger  88-> 60, crash 0/0
+  seed 1076 (in-path): clear 0.15->0.17 m, trigger  84-> 40, crash 1/1
+  seed 1077 (clear  ): clear 1.09->0.79 m, trigger  36-> 20, crash 0/0
+  seed 1078 (clear  ): clear 0.94->0.71 m, trigger  20-> 20, crash 0/0
+  seed 1079 (clear  ): clear 1.70->1.23 m, trigger  36-> 36, crash 0/0
+  seed 1080 (in-path): clear 0.38->0.27 m, trigger  76-> 60, crash 0/0
+  seed 1081 (in-path): clear 0.36->0.16 m, trigger  88-> 64, crash 0/1
+  seed 1082 (in-path): clear 0.35->0.55 m, trigger  64-> 44, crash 0/0
+  seed 1083 (in-path): clear 0.41->0.37 m, trigger  84-> 56, crash 0/0
+  seed 1084 (in-path): clear 0.36->0.13 m, trigger  52-> 32, crash 0/1
+  seed 1085 (in-path): clear 0.32->0.14 m, trigger  72-> 48, crash 0/1
+  seed 1086 (in-path): clear 0.18->0.31 m, trigger  72-> 36, crash 1/0
+  seed 1087 (clear  ): clear 1.47->1.00 m, trigger  12-> 12, crash 0/0
+  seed 1088 (clear  ): clear 1.44->0.91 m, trigger  64-> 64, crash 0/0
+  seed 1089 (clear  ): clear 0.91->0.56 m, trigger  64-> 64, crash 0/0
+  seed 1090 (in-path): clear 0.36->0.58 m, trigger  56-> 40, crash 0/0
+  seed 1091 (in-path): clear 0.33->0.08 m, trigger  52-> 40, crash 0/1
+  seed 1092 (in-path): clear 0.27->0.59 m, trigger  64-> 48, crash 0/0
+  seed 1093 (in-path): clear 0.17->0.15 m, trigger  88-> 52, crash 1/1
+  seed 1094 (in-path): clear 0.36->0.30 m, trigger  60-> 40, crash 0/0
+  seed 1095 (in-path): clear 0.32->0.40 m, trigger  64-> 40, crash 0/0
+  seed 1096 (in-path): clear 0.42->0.51 m, trigger  84-> 60, crash 0/0
+  seed 1097 (clear  ): clear 1.24->1.16 m, trigger  64-> 64, crash 0/0
+  seed 1098 (clear  ): clear 0.87->1.10 m, trigger  12-> 12, crash 0/0
+  seed 1099 (clear  ): clear 1.57->0.39 m, trigger  36-> 20, crash 0/0
+  seed 1100 (in-path): clear 0.35->0.08 m, trigger  60-> 40, crash 0/1
+  seed 1101 (in-path): clear 0.14->0.13 m, trigger  76-> 28, crash 1/1
+  seed 1102 (in-path): clear 0.14->0.14 m, trigger  76-> 28, crash 1/1
+  seed 1103 (in-path): clear 0.40->0.25 m, trigger  76-> 60, crash 0/0
+  seed 1104 (in-path): clear 0.33->0.14 m, trigger  52-> 32, crash 0/1
+  seed 1105 (in-path): clear 0.25->0.45 m, trigger  64-> 48, crash 0/0
+  seed 1106 (in-path): clear 0.43->0.41 m, trigger  84-> 56, crash 0/0
+  seed 1107 (clear  ): clear 0.89->0.34 m, trigger  64-> 64, crash 0/0
+  seed 1108 (clear  ): clear 0.76->0.39 m, trigger  64-> 64, crash 0/0
+  seed 1109 (clear  ): clear 1.15->0.62 m, trigger  20-> 12, crash 0/0
+  seed 1110 (in-path): clear 0.36->0.50 m, trigger  64-> 52, crash 0/0
+  seed 1111 (in-path): clear 0.33->0.29 m, trigger  72-> 56, crash 0/0
+  seed 1112 (in-path): clear 0.16->0.23 m, trigger 100-> 48, crash 1/0
+  seed 1113 (in-path): clear 0.17->0.17 m, trigger  84-> 32, crash 1/1
+  seed 1114 (in-path): clear 0.28->0.20 m, trigger  80-> 60, crash 0/1
+  seed 1115 (in-path): clear 0.37->0.32 m, trigger  76-> 56, crash 0/0
+  seed 1116 (in-path): clear 0.28->0.20 m, trigger  68-> 52, crash 0/1
+  seed 1117 (clear  ): clear 1.39->0.90 m, trigger  64-> 64, crash 0/0
+  seed 1118 (clear  ): clear 0.82->0.80 m, trigger  64-> 64, crash 0/0
+  seed 1119 (clear  ): clear 0.97->0.79 m, trigger  64-> 64, crash 0/0
+  seed 1120 (in-path): clear 0.29->0.28 m, trigger  68-> 52, crash 0/0
+  seed 1121 (in-path): clear 0.20->0.29 m, trigger  -1-> 52, crash 1/0
+  seed 1122 (in-path): clear 0.33->0.13 m, trigger  72-> 48, crash 0/1
+  seed 1123 (in-path): clear 0.41->0.50 m, trigger  60-> 36, crash 0/0
+  seed 1124 (in-path): clear 0.39->0.39 m, trigger  64-> 40, crash 0/0
+  seed 1125 (in-path): clear 0.34->0.34 m, trigger  60-> 44, crash 0/0
+  seed 1126 (in-path): clear 0.36->0.25 m, trigger  80-> 60, crash 0/0
+  seed 1127 (clear  ): clear 0.84->0.60 m, trigger  36-> 36, crash 0/0
+  seed 1128 (clear  ): clear 0.83->0.49 m, trigger  48-> 64, crash 0/0
+  seed 1129 (clear  ): clear 1.27->0.47 m, trigger  64-> 64, crash 0/0
+  seed 1130 (in-path): clear 0.32->0.24 m, trigger  68-> 44, crash 0/0
+  seed 1131 (in-path): clear 0.33->0.10 m, trigger  48-> 32, crash 0/1
+  seed 1132 (in-path): clear 0.29->0.38 m, trigger  56-> 48, crash 0/0
+  seed 1133 (in-path): clear 0.18->0.07 m, trigger 108-> 64, crash 1/1
+  seed 1134 (in-path): clear 0.46->0.25 m, trigger  60-> 40, crash 0/0
+  seed 1135 (in-path): clear 0.40->0.28 m, trigger  68-> 60, crash 0/0
+  seed 1136 (in-path): clear 0.15->0.13 m, trigger  80-> 40, crash 1/1
+  seed 1137 (clear  ): clear 0.43->0.66 m, trigger  64-> 12, crash 0/0
+  seed 1138 (clear  ): clear 1.21->1.16 m, trigger  12-> 12, crash 0/0
+  seed 1139 (clear  ): clear 1.50->1.07 m, trigger  64-> 36, crash 0/0
+  seed 1140 (in-path): clear 0.37->0.22 m, trigger  60-> 36, crash 0/0
+  seed 1141 (in-path): clear 0.15->0.17 m, trigger  96-> 48, crash 1/1
+  seed 1142 (in-path): clear 0.29->0.20 m, trigger  52-> 36, crash 0/1
+  seed 1143 (in-path): clear 0.38->0.38 m, trigger  60-> 36, crash 0/0
+  seed 1144 (in-path): clear 0.15->0.24 m, trigger  88-> 44, crash 1/0
+  seed 1145 (in-path): clear 0.36->0.30 m, trigger  56-> 36, crash 0/0
+  seed 1146 (in-path): clear 0.39->0.17 m, trigger  88-> 64, crash 0/1
+  seed 1147 (clear  ): clear 1.06->0.95 m, trigger  36-> 20, crash 0/0
+  seed 1148 (clear  ): clear 1.50->0.43 m, trigger  36-> 20, crash 0/0
+  seed 1149 (clear  ): clear 0.99->1.00 m, trigger  20-> 20, crash 0/0
+  seed 1150 (in-path): clear 0.20->0.27 m, trigger  -1-> 48, crash 1/0
+  seed 1151 (in-path): clear 0.39->0.25 m, trigger  52-> 36, crash 0/0
+  seed 1152 (in-path): clear 0.40->0.02 m, trigger  56-> 28, crash 0/1
+  seed 1153 (in-path): clear 0.16->0.19 m, trigger 108-> 56, crash 1/1
+  seed 1154 (in-path): clear 0.40->0.26 m, trigger  48-> 36, crash 0/0
+  seed 1155 (in-path): clear 0.45->0.30 m, trigger  76-> 72, crash 0/0
+  seed 1156 (in-path): clear 0.36->0.18 m, trigger  52-> 32, crash 0/1
+  seed 1157 (clear  ): clear 0.97->0.68 m, trigger  40-> 40, crash 0/0
+  seed 1158 (clear  ): clear 1.24->1.03 m, trigger  20-> 12, crash 0/0
+  seed 1159 (clear  ): clear 1.74->0.59 m, trigger  20-> 12, crash 0/0
+  seed 1160 (in-path): clear 0.15->0.16 m, trigger  92-> 48, crash 1/1
+  seed 1161 (in-path): clear 0.15->0.16 m, trigger 100-> 56, crash 1/1
+  seed 1162 (in-path): clear 0.39->0.53 m, trigger  48-> 32, crash 0/0
+  seed 1163 (in-path): clear 0.29->0.15 m, trigger  92-> 64, crash 0/1
+  seed 1164 (in-path): clear 0.16->0.15 m, trigger 104-> 52, crash 1/1
+  seed 1165 (in-path): clear 0.18->0.23 m, trigger  -1-> 44, crash 1/0
+  seed 1166 (in-path): clear 0.33->0.29 m, trigger  72-> 56, crash 0/0
+  seed 1167 (clear  ): clear 1.00->0.97 m, trigger  12-> 12, crash 0/0
+  seed 1168 (clear  ): clear 1.14->1.01 m, trigger  12-> 12, crash 0/0
+  seed 1169 (clear  ): clear 0.68->0.24 m, trigger  64-> 64, crash 0/0
+  seed 1170 (in-path): clear 0.38->0.18 m, trigger  68-> 48, crash 0/1
+  seed 1171 (in-path): clear 0.29->0.11 m, trigger  80-> 52, crash 0/1
+  seed 1172 (in-path): clear 0.26->0.54 m, trigger  64-> 44, crash 0/0
+  seed 1173 (in-path): clear 0.37->0.18 m, trigger  68-> 48, crash 0/1
+  seed 1174 (in-path): clear 0.27->0.20 m, trigger  80-> 56, crash 0/1
+  seed 1175 (in-path): clear 0.27->0.25 m, trigger  60-> 40, crash 0/0
+  seed 1176 (in-path): clear 0.38->0.57 m, trigger  52-> 20, crash 0/0
+  seed 1177 (clear  ): clear 0.89->0.87 m, trigger  36-> 36, crash 0/0
+  seed 1178 (clear  ): clear 1.36->0.93 m, trigger  64-> 36, crash 0/0
+  seed 1179 (clear  ): clear 1.07->0.73 m, trigger  36-> 36, crash 0/0
+  seed 1180 (in-path): clear 0.35->0.19 m, trigger  84-> 60, crash 0/1
+  seed 1181 (in-path): clear 0.43->0.40 m, trigger  80-> 52, crash 0/0
+  seed 1182 (in-path): clear 0.28->0.44 m, trigger  64-> 44, crash 0/0
+  seed 1183 (in-path): clear 0.34->0.07 m, trigger  48-> 32, crash 0/1
+  seed 1184 (in-path): clear 0.19->0.51 m, trigger  84-> 60, crash 1/0
+  seed 1185 (in-path): clear 0.36->0.19 m, trigger  52-> 36, crash 0/1
+  seed 1186 (in-path): clear 0.18->0.24 m, trigger  -1-> 36, crash 1/0
+  seed 1187 (clear  ): clear 1.08->0.81 m, trigger  20-> 20, crash 0/0
+  seed 1188 (clear  ): clear 1.12->0.40 m, trigger  64-> 64, crash 0/0
+  seed 1189 (clear  ): clear 0.79->0.79 m, trigger  36-> 36, crash 0/0
+  seed 1190 (in-path): clear 0.34->0.14 m, trigger  84-> 60, crash 0/1
+  seed 1191 (in-path): clear 0.41->0.40 m, trigger  76-> 48, crash 0/0
+  seed 1192 (in-path): clear 0.45->0.15 m, trigger  80-> 64, crash 0/1
+  seed 1193 (in-path): clear 0.42->0.21 m, trigger  64-> 48, crash 0/1
+  seed 1194 (in-path): clear 0.19->0.27 m, trigger  -1-> 36, crash 1/0
+  seed 1195 (in-path): clear 0.37->0.62 m, trigger  64-> 48, crash 0/0
+  seed 1196 (in-path): clear 0.31->0.53 m, trigger  48-> 36, crash 0/0
+  seed 1197 (clear  ): clear 0.99->0.77 m, trigger  64-> 64, crash 0/0
+  seed 1198 (clear  ): clear 0.84->0.38 m, trigger  64-> 64, crash 0/0
+  seed 1199 (clear  ): clear 0.92->0.57 m, trigger  36-> 36, crash 0/0
+  seed 1200 (in-path): clear 0.38->0.31 m, trigger  52-> 36, crash 0/0
+  seed 1201 (in-path): clear 0.39->0.21 m, trigger  56-> 36, crash 0/1
+  seed 1202 (in-path): clear 0.38->0.33 m, trigger  60-> 36, crash 0/0
+  seed 1203 (in-path): clear 0.35->0.32 m, trigger  68-> 56, crash 0/0
+  seed 1204 (in-path): clear 0.15->0.17 m, trigger  84-> 36, crash 1/1
+  seed 1205 (in-path): clear 0.21->0.10 m, trigger  68-> 40, crash 1/1
+  seed 1206 (in-path): clear 0.33->0.28 m, trigger  84-> 64, crash 0/0
+  seed 1207 (clear  ): clear 1.12->0.98 m, trigger  12-> 12, crash 0/0
+  seed 1208 (clear  ): clear 0.94->0.94 m, trigger  64-> 64, crash 0/0
+  seed 1209 (clear  ): clear 1.58->0.86 m, trigger  12-> 12, crash 0/0
+  seed 1210 (in-path): clear 0.30->0.52 m, trigger  60-> 40, crash 0/0
+  seed 1211 (in-path): clear 0.44->0.41 m, trigger  84-> 56, crash 0/0
+  seed 1212 (in-path): clear 0.45->0.30 m, trigger  76-> 56, crash 0/0
+  seed 1213 (in-path): clear 0.33->0.31 m, trigger  56-> 36, crash 0/0
+  seed 1214 (in-path): clear 0.40->0.18 m, trigger  80-> 60, crash 0/1
+  seed 1215 (in-path): clear 0.41->0.18 m, trigger  64-> 36, crash 0/1
+  seed 1216 (in-path): clear 0.15->0.18 m, trigger 104-> 60, crash 1/1
+  seed 1217 (clear  ): clear 1.57->0.90 m, trigger  36-> 36, crash 0/0
+  seed 1218 (clear  ): clear 1.48->0.95 m, trigger  12-> 12, crash 0/0
+  seed 1219 (clear  ): clear 1.15->0.70 m, trigger  36-> 36, crash 0/0
+  seed 1220 (in-path): clear 0.43->0.40 m, trigger  84-> 56, crash 0/0
+  seed 1221 (in-path): clear 0.36->0.30 m, trigger  64-> 44, crash 0/0
+  seed 1222 (in-path): clear 0.37->0.30 m, trigger  72-> 48, crash 0/0
+  seed 1223 (in-path): clear 0.40->0.25 m, trigger  84-> 64, crash 0/0
+  seed 1224 (in-path): clear 0.17->0.27 m, trigger 120-> 60, crash 1/0
+  seed 1225 (in-path): clear 0.45->0.31 m, trigger  76-> 52, crash 0/0
+  seed 1226 (in-path): clear 0.38->0.36 m, trigger  76-> 48, crash 0/0
+  seed 1227 (clear  ): clear 1.39->0.84 m, trigger  20-> 20, crash 0/0
+  seed 1228 (clear  ): clear 0.84->0.62 m, trigger  64-> 64, crash 0/0
+  seed 1229 (clear  ): clear 0.96->0.84 m, trigger  36-> 36, crash 0/0#rl_tools::hyperlux: WebGPU adapter: llvmpipe (LLVM 20.1.2, 256 bits) (backend 6)
+  seed 1230 (in-path): clear 0.34->0.31 m, trigger  72-> 52, crash 0/0
+  seed 1231 (in-path): clear 0.31->0.32 m, trigger  52-> 36, crash 0/0
+  seed 1232 (in-path): clear 0.26->0.50 m, trigger  56-> 48, crash 0/0
+  seed 1233 (in-path): clear 0.43->0.43 m, trigger  72-> 44, crash 0/0
+  seed 1234 (in-path): clear 0.18->0.22 m, trigger  -1-> 40, crash 1/0
+  seed 1235 (in-path): clear 0.35->0.48 m, trigger  56-> 36, crash 0/0
+  seed 1236 (in-path): clear 0.46->0.20 m, trigger  84-> 68, crash 0/1
+  seed 1237 (clear  ): clear 1.33->1.04 m, trigger  64-> 64, crash 0/0
+  seed 1238 (clear  ): clear 0.90->0.98 m, trigger  64-> 64, crash 0/0
+  seed 1239 (clear  ): clear 0.93->0.69 m, trigger  -1-> 64, crash 0/0
+  seed 1240 (in-path): clear 0.39->0.02 m, trigger  84-> 64, crash 0/1
+  seed 1241 (in-path): clear 0.44->0.18 m, trigger  76-> 56, crash 0/1
+  seed 1242 (in-path): clear 0.48->0.35 m, trigger  52-> 32, crash 0/0
+  seed 1243 (in-path): clear 0.42->0.42 m, trigger  72-> 44, crash 0/0
+  seed 1244 (in-path): clear 0.17->0.18 m, trigger 104-> 44, crash 1/1
+  seed 1245 (in-path): clear 0.26->0.10 m, trigger  88-> 68, crash 0/1
+  seed 1246 (in-path): clear 0.38->0.11 m, trigger  72-> 52, crash 0/1
+  seed 1247 (clear  ): clear 1.05->0.97 m, trigger  64-> 36, crash 0/0
+  seed 1248 (clear  ): clear 1.05->0.67 m, trigger  64-> 64, crash 0/0
+  seed 1249 (clear  ): clear 1.46->1.23 m, trigger  12-> 12, crash 0/0
+  seed 1250 (in-path): clear 0.41->0.11 m, trigger  88-> 60, crash 0/1
+  seed 1251 (in-path): clear 0.25->0.29 m, trigger  68-> 56, crash 0/0
+  seed 1252 (in-path): clear 0.43->0.51 m, trigger  60-> 40, crash 0/0
+  seed 1253 (in-path): clear 0.40->0.32 m, trigger  80-> 64, crash 0/0
+  seed 1254 (in-path): clear 0.18->0.26 m, trigger  -1-> 40, crash 1/0
+  seed 1255 (in-path): clear 0.41->0.34 m, trigger  68-> 40, crash 0/0
+  seed 1256 (in-path): clear 0.40->0.28 m, trigger  52-> 28, crash 0/0
+  seed 1257 (clear  ): clear 1.43->0.76 m, trigger  20-> 12, crash 0/0
+  seed 1258 (clear  ): clear 0.77->0.68 m, trigger  64-> 64, crash 0/0
+  seed 1259 (clear  ): clear 0.84->0.84 m, trigger  64-> 64, crash 0/0
+  seed 1260 (in-path): clear 0.27->0.20 m, trigger  80-> 60, crash 0/1
+  seed 1261 (in-path): clear 0.15->0.16 m, trigger  84-> 44, crash 1/1
+  seed 1262 (in-path): clear 0.44->0.38 m, trigger  52-> 32, crash 0/0
+  seed 1263 (in-path): clear 0.32->0.26 m, trigger  72-> 48, crash 0/0
+  seed 1264 (in-path): clear 0.22->0.30 m, trigger  68-> 40, crash 0/0
+  seed 1265 (in-path): clear 0.37->0.18 m, trigger  64-> 44, crash 0/1
+  seed 1266 (in-path): clear 0.18->0.09 m, trigger  96-> 36, crash 1/1
+  seed 1267 (clear  ): clear 1.12->0.55 m, trigger  64-> 64, crash 0/0
+  seed 1268 (clear  ): clear 0.89->0.69 m, trigger  36-> 36, crash 0/0
+  seed 1269 (clear  ): clear 1.15->0.94 m, trigger  64-> 64, crash 0/0
+  seed 1270 (in-path): clear 0.33->0.45 m, trigger  84-> 60, crash 0/0
+  seed 1271 (in-path): clear 0.44->0.40 m, trigger  68-> 48, crash 0/0
+  seed 1272 (in-path): clear 0.17->0.17 m, trigger 120-> 64, crash 1/1
+  seed 1273 (in-path): clear 0.30->0.19 m, trigger  72-> 52, crash 0/1
+  seed 1274 (in-path): clear 0.28->0.26 m, trigger  64-> 48, crash 0/0
+  seed 1275 (in-path): clear 0.45->0.54 m, trigger  68-> 52, crash 0/0
+  seed 1276 (in-path): clear 0.27->0.46 m, trigger  56-> 40, crash 0/0
+  seed 1277 (clear  ): clear 1.14->0.82 m, trigger  12-> 12, crash 0/0
+  seed 1278 (clear  ): clear 0.99->0.80 m, trigger  36-> 36, crash 0/0
+  seed 1279 (clear  ): clear 1.89->1.21 m, trigger  64-> 64, crash 0/0
+  seed 1280 (in-path): clear 0.22->0.14 m, trigger  92-> 60, crash 0/1
+  seed 1281 (in-path): clear 0.30->0.14 m, trigger  92-> 64, crash 0/1
+  seed 1282 (in-path): clear 0.28->0.24 m, trigger  96-> 64, crash 0/0
+  seed 1283 (in-path): clear 0.47->0.20 m, trigger  76-> 56, crash 0/1
+  seed 1284 (in-path): clear 0.36->0.51 m, trigger  60-> 40, crash 0/0
+  seed 1285 (in-path): clear 0.37->0.14 m, trigger  68-> 44, crash 0/1
+  seed 1286 (in-path): clear 0.40->0.33 m, trigger  52-> 36, crash 0/0
+  seed 1287 (clear  ): clear 0.92->0.73 m, trigger  20-> 12, crash 0/0
+  seed 1288 (clear  ): clear 1.54->0.85 m, trigger  12-> 12, crash 0/0
+  seed 1289 (clear  ): clear 0.92->0.68 m, trigger  -1-> 64, crash 0/0
+  seed 1290 (in-path): clear 0.15->0.12 m, trigger  88-> 52, crash 1/1
+  seed 1291 (in-path): clear 0.23->0.16 m, trigger  84-> 52, crash 0/1
+  seed 1292 (in-path): clear 0.28->0.42 m, trigger  56-> 36, crash 0/0
+  seed 1293 (in-path): clear 0.15->0.09 m, trigger  80-> 40, crash 1/1
+  seed 1294 (in-path): clear 0.38->0.44 m, trigger  72-> 56, crash 0/0
+  seed 1295 (in-path): clear 0.45->0.20 m, trigger  64-> 44, crash 0/1
+  seed 1296 (in-path): clear 0.46->0.21 m, trigger  64-> 48, crash 0/1
+  seed 1297 (clear  ): clear 1.71->0.48 m, trigger  36-> 12, crash 0/0
+  seed 1298 (clear  ): clear 0.73->1.02 m, trigger  12-> 12, crash 0/0
+  seed 1299 (clear  ): clear 0.98->0.86 m, trigger  64-> 64, crash 0/0
+WORLD-POLICY OK: seeds=300 (210 in-path / 90 clear) [hyperdrone/pybullet, 36s]
+  crash_rate:        reactive 23% -> wm 41%
+  mean_min_clearance: 0.32 m -> 0.27 m
+  mean_trigger_lead: +529 ms (n=198 both triggered)
+  false_positive:    reactive 97% -> wm 100% of clear runs
+  goal_time:         wm +13% vs reactive (n=103 clean)

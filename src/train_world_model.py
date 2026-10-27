@@ -254,7 +254,7 @@ def veer_ranking(data: dict, rolls, enc, pred, cheads, device) -> tuple:
     safer. Chance = 0.5."""
     taus = (np.arange(HORIZONS[-1] + 1) / CTRL_HZ)[:, None]  # (k+1, 1)
     i_l, i_r = ACTION_NAMES.index("veer_left"), ACTION_NAMES.index("veer_right")
-    cos_fov = np.cos(np.radians(FOV_HALF_DEG))
+    cos_fov = np.cos(np.radians(float(data.get("fov_half_deg", FOV_HALF_DEG))))
     frames, gt_left_safer, svs = [], [], []
     L = data["frames"].shape[1]
     for r in rolls:
@@ -309,7 +309,11 @@ def train(
     (checkpoint dict, metrics dict). Callable from the eval harness.
     `robust=True` adds Lesson 20-style appearance augmentation to the online
     encoder's frames (pair it with a `--randomize` dataset for step 5)."""
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available() else "cpu"
+    )
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
 
@@ -470,6 +474,8 @@ def train(
             "a_norm": [float(v) for v in A_NORM],
             "action_names": list(ACTION_NAMES),
             "action_vecs": [[float(v) for v in row] for row in ACTION_VECS],
+            "fov_deg": float(data.get("fov_deg", 60.0)),  # 60 = the pybullet camera
+            "source": str(data.get("source", "pybullet")),
         },
     }
     metrics = {
@@ -504,13 +510,13 @@ def load_model(path: str = MODEL, device: str = "cpu"):
     return enc, pred, cheads, nhead, meta
 
 
-def _load_or_make(selftest: bool) -> dict:
+def _load_or_make(selftest: bool, path: str = DATA) -> dict:
     if selftest:
         return gen(20, 110)  # self-contained tiny set (no prior npz needed)
-    if os.path.exists(DATA):
-        blob = np.load(DATA)
+    if os.path.exists(path):
+        blob = np.load(path)
         return {k: blob[k] for k in blob.files}
-    print(f"[INFO] no dataset at {DATA}; generating a default one ...")
+    print(f"[INFO] no dataset at {path}; generating a default one ...")
     return gen(32, 120)
 
 
@@ -520,10 +526,18 @@ def main() -> None:
     ap.add_argument("--batch", type=int, default=64)
     ap.add_argument("--robust", action="store_true")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument(
+        "--data", default=DATA, help="dataset npz, e.g. output/wm_dataset_hyperdrone.npz"
+    )
+    ap.add_argument("--out", default=None, help="checkpoint path (default output/world_model.pth)")
     args = ap.parse_args()
     epochs = 60 if args.selftest else args.epochs
 
-    data = _load_or_make(args.selftest)
+    data = _load_or_make(args.selftest, args.data)
+    print(
+        f"[INFO] dataset {args.data if not args.selftest else '(selftest)'}: "
+        f"source={str(data.get('source', 'pybullet'))}, camera {float(data.get('fov_deg', 60)):g} deg"
+    )
     ckpt, m = train(data, epochs=epochs, batch=args.batch, robust=args.robust)
 
     # a selftest must not clobber a real trained checkpoint with its toy one
@@ -531,6 +545,8 @@ def main() -> None:
     out = MODEL.replace(".pth", "_selftest.pth") if args.selftest else MODEL
     if args.robust and not args.selftest:
         out = MODEL.replace(".pth", "_robust.pth")
+    if args.out:
+        out = args.out
     os.makedirs(os.path.dirname(out), exist_ok=True)
     torch.save(ckpt, out)
     auc_str = "/".join(f"{a:.2f}" for a in m["auc"])

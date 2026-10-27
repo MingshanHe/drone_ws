@@ -1,0 +1,6 @@
+  v=0.8 m/s: crash reactive 55% / wm 58%  (min clear 0.25 / 0.25 m)
+  v=1.0 m/s: crash reactive 57% / wm 45%  (min clear 0.23 / 0.29 m)
+  v=1.2 m/s: crash reactive 62% / wm 42%  (min clear 0.21 / 0.30 m)
+  v=1.4 m/s: crash reactive 72% / wm 48%  (min clear 0.18 / 0.31 m)
+  v=1.6 m/s: crash reactive 67% / wm 53%  (min clear 0.18 / 0.29 m)
+SPEED-SWEEP OK: 60 single-pillar courses/speed [hyperdrone/hyperdrone, 24s] — crash (reactive/wm) at 0.8 m/s = 55%/58%; at 1.6 m/s = 67%/53%

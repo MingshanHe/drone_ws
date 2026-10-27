@@ -1,0 +1,49 @@
+/home/robot/miniconda3/envs/drone_python/lib/python3.12/site-packages/gymnasium/spaces/box.py:231: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+  gym.logger.warn(
+/home/robot/miniconda3/envs/drone_python/lib/python3.12/site-packages/gymnasium/spaces/box.py:297: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+  gym.logger.warn(
+[INFO] checkpoint src/output/world_model.pth: trained on pybullet, camera 60 deg
+[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:
+[INFO] forest: 22 pillars, 6 rows, goal x=6.0 m, start [0.0, 0.0], 20 seed(s) from 0
+  seed 0 reactive : reached=True  end error=0.09 m  crashes=1  min clearance=0.21 m  avoiding 76% of decisions  time=11.6 s
+  seed 0 wm-mpc   : reached=True  end error=0.10 m  crashes=5  min clearance=0.04 m  avoiding 50% of decisions  time=14.0 s
+  seed 1 reactive : reached=True  end error=0.09 m  crashes=2  min clearance=0.05 m  avoiding 73% of decisions  time=11.3 s
+  seed 1 wm-mpc   : reached=True  end error=0.09 m  crashes=3  min clearance=0.17 m  avoiding 70% of decisions  time=11.8 s
+  seed 2 reactive : reached=True  end error=0.10 m  crashes=1  min clearance=0.15 m  avoiding 61% of decisions  time=11.4 s
+  seed 2 wm-mpc   : reached=True  end error=0.09 m  crashes=4  min clearance=0.02 m  avoiding 71% of decisions  time=11.5 s
+  seed 3 reactive : reached=True  end error=0.10 m  crashes=2  min clearance=0.11 m  avoiding 69% of decisions  time=10.9 s
+  seed 3 wm-mpc   : reached=True  end error=0.10 m  crashes=4  min clearance=0.02 m  avoiding 70% of decisions  time=11.7 s
+  seed 4 reactive : reached=True  end error=0.10 m  crashes=1  min clearance=0.21 m  avoiding 62% of decisions  time=13.1 s
+  seed 4 wm-mpc   : reached=True  end error=0.10 m  crashes=3  min clearance=0.09 m  avoiding 71% of decisions  time=11.5 s
+  seed 5 reactive : reached=True  end error=0.09 m  crashes=2  min clearance=0.14 m  avoiding 63% of decisions  time=11.2 s
+  seed 5 wm-mpc   : reached=True  end error=0.10 m  crashes=5  min clearance=0.10 m  avoiding 68% of decisions  time=11.2 s
+  seed 6 reactive : reached=True  end error=0.10 m  crashes=3  min clearance=0.10 m  avoiding 70% of decisions  time=11.7 s
+  seed 6 wm-mpc   : reached=True  end error=0.09 m  crashes=5  min clearance=0.03 m  avoiding 53% of decisions  time=10.9 s
+  seed 7 reactive : reached=False  end error=2.79 m  crashes=4  min clearance=0.12 m  avoiding 62% of decisions  time=23.8 s
+  seed 7 wm-mpc   : reached=True  end error=0.10 m  crashes=3  min clearance=0.12 m  avoiding 62% of decisions  time=11.4 s
+  seed 8 reactive : reached=True  end error=0.10 m  crashes=6  min clearance=0.01 m  avoiding 59% of decisions  time=12.9 s
+  seed 8 wm-mpc   : reached=True  end error=0.09 m  crashes=4  min clearance=0.05 m  avoiding 68% of decisions  time=12.1 s
+  seed 9 reactive : reached=True  end error=0.09 m  crashes=1  min clearance=0.08 m  avoiding 47% of decisions  time=9.9 s
+  seed 9 wm-mpc   : reached=True  end error=0.10 m  crashes=4  min clearance=0.03 m  avoiding 64% of decisions  time=12.9 s
+  seed 10 reactive : reached=True  end error=0.10 m  crashes=2  min clearance=0.02 m  avoiding 50% of decisions  time=12.8 s
+  seed 10 wm-mpc   : reached=True  end error=0.10 m  crashes=1  min clearance=0.22 m  avoiding 54% of decisions  time=10.8 s
+  seed 11 reactive : reached=True  end error=0.09 m  crashes=4  min clearance=0.05 m  avoiding 65% of decisions  time=10.8 s
+  seed 11 wm-mpc   : reached=True  end error=0.10 m  crashes=4  min clearance=0.01 m  avoiding 47% of decisions  time=14.9 s
+  seed 12 reactive : reached=True  end error=0.10 m  crashes=2  min clearance=0.11 m  avoiding 62% of decisions  time=12.2 s
+  seed 12 wm-mpc   : reached=True  end error=0.09 m  crashes=4  min clearance=0.01 m  avoiding 74% of decisions  time=11.8 s
+  seed 13 reactive : reached=True  end error=0.10 m  crashes=2  min clearance=0.15 m  avoiding 51% of decisions  time=10.4 s
+  seed 13 wm-mpc   : reached=True  end error=0.09 m  crashes=2  min clearance=0.11 m  avoiding 72% of decisions  time=11.4 s
+  seed 14 reactive : reached=True  end error=0.10 m  crashes=1  min clearance=0.05 m  avoiding 69% of decisions  time=11.9 s
+  seed 14 wm-mpc   : reached=True  end error=0.09 m  crashes=3  min clearance=0.02 m  avoiding 69% of decisions  time=11.9 s
+  seed 15 reactive : reached=True  end error=0.10 m  crashes=2  min clearance=0.11 m  avoiding 35% of decisions  time=10.0 s
+  seed 15 wm-mpc   : reached=True  end error=0.10 m  crashes=3  min clearance=0.05 m  avoiding 60% of decisions  time=11.6 s
+  seed 16 reactive : reached=True  end error=0.10 m  crashes=3  min clearance=0.05 m  avoiding 66% of decisions  time=10.6 s
+  seed 16 wm-mpc   : reached=True  end error=0.10 m  crashes=3  min clearance=0.03 m  avoiding 46% of decisions  time=14.1 s
+  seed 17 reactive : reached=True  end error=0.09 m  crashes=1  min clearance=0.12 m  avoiding 38% of decisions  time=9.4 s
+  seed 17 wm-mpc   : reached=True  end error=0.10 m  crashes=5  min clearance=0.01 m  avoiding 75% of decisions  time=11.7 s
+  seed 18 reactive : reached=True  end error=0.09 m  crashes=2  min clearance=0.04 m  avoiding 47% of decisions  time=11.2 s
+  seed 18 wm-mpc   : reached=True  end error=0.09 m  crashes=2  min clearance=0.06 m  avoiding 69% of decisions  time=11.0 s
+  seed 19 reactive : reached=True  end error=0.10 m  crashes=2  min clearance=0.20 m  avoiding 56% of decisions  time=10.5 s
+  seed 19 wm-mpc   : reached=True  end error=0.10 m  crashes=6  min clearance=0.09 m  avoiding 48% of decisions  time=13.4 s
+FOREST OK (20 forests x 6 rows): reactive: crashes/forest 2.20, crash-free 0%, reached 95%, min clear 0.11 m, time 11.9 s | wm-mpc: crashes/forest 3.65, crash-free 0%, reached 100%, min clear 0.06 m, time 12.1 s
+[INFO] saved /home/robot/sakana-ai/Drone Dataset/drone_ws/src/output/forest_pybullet_shipped_compare.png

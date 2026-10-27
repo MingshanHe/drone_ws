@@ -57,13 +57,18 @@ BASE_V = 0.8  # forward command at speed factor 1.0 (m/s)
 OUT = os.path.join(HERE, "output", "speed_sweep.png")
 
 
-def _policies(enc, pred, cheads, nhead, meta):
+def _policies(enc, pred, cheads, nhead, meta, learned: bool = True):
     """Reactive + hand MPC always; learned variants join automatically when a
-    trained .zip exists (step 6). Each factory takes the cruise-speed factor."""
+    trained .zip exists (step 6). Each factory takes the cruise-speed factor.
+    `learned=False` keeps only the two hand policies (the PPO policies were
+    trained on top of the pybullet world model's latents, so they only make
+    sense with that checkpoint)."""
     mk = {
         "reactive": lambda s: ReactivePolicy(enc, nhead),
         "wm": lambda s: WMPolicy(enc, pred, cheads, meta, speed=s),
     }
+    if not learned:
+        return mk
     from learn_policy import LearnedPolicy, _load_policy, zip_path
 
     for name, rec, edge, curr in (
@@ -81,14 +86,14 @@ def _policies(enc, pred, cheads, nhead, meta):
     return mk
 
 
-def sweep(speeds, n_seeds: int, seed0: int) -> list:
+def sweep(speeds, n_seeds: int, seed0: int, path: str = None, learned: bool = True) -> list:
     """Fly `n_seeds` single-pillar courses per speed with every available
     policy. The same seeds repeat across speeds, so each speed step changes
     exactly one thing — and `solo` courses put the one threat where every
     policy can see it, so the sweep measures the anticipation mechanism, not
     the FOV limit."""
-    enc, pred, cheads, nhead, meta = load_or_train(device="cpu")
-    mk = _policies(enc, pred, cheads, nhead, meta)
+    enc, pred, cheads, nhead, meta = load_or_train(device="cpu", path=path)
+    mk = _policies(enc, pred, cheads, nhead, meta, learned=learned)
     env = make_env()
     rows = []
     for s in speeds:
@@ -130,7 +135,7 @@ LABELS = {
 }
 
 
-def _save_plot(rows) -> None:
+def _save_plot(rows, out: str = OUT) -> None:
     import matplotlib
 
     matplotlib.use("Agg")
@@ -162,10 +167,10 @@ def _save_plot(rows) -> None:
     ax2.set_ylabel("mean min clearance (m)")
     ax2.set_title("Anticipation is a time budget")
     ax2.legend(fontsize=7)
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
     fig.tight_layout()
-    fig.savefig(OUT, dpi=110)
-    print(f"[INFO] saved {OUT}")
+    fig.savefig(out, dpi=110)
+    print(f"[INFO] saved {out}")
 
 
 def main() -> None:
@@ -173,11 +178,14 @@ def main() -> None:
     ap.add_argument("--seeds", type=int, default=30)
     ap.add_argument("--seed0", type=int, default=3000)
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--model", default=None, help="checkpoint (default output/world_model.pth)")
+    ap.add_argument("--no-learned", action="store_true", help="only the reactive and wm hand policies")
+    ap.add_argument("--plot", default=OUT, help="where to save the figure")
     args = ap.parse_args()
     speeds, n = ((1.0, 2.0), 8) if args.selftest else (SPEEDS, args.seeds)
 
-    rows = sweep(speeds, n, args.seed0)
-    _save_plot(rows)
+    rows = sweep(speeds, n, args.seed0, path=args.model, learned=not args.no_learned)
+    _save_plot(rows, args.plot)
     lo, hi = rows[0], rows[-1]
     names = rows[0]["_names"]
     lo_s = "/".join(f"{lo[f'crash_{k}']:.0%}" for k in names)

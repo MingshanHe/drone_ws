@@ -1,0 +1,12 @@
+/home/robot/miniconda3/envs/drone_python/lib/python3.12/site-packages/gymnasium/spaces/box.py:231: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+  gym.logger.warn(
+/home/robot/miniconda3/envs/drone_python/lib/python3.12/site-packages/gymnasium/spaces/box.py:297: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+  gym.logger.warn(
+[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:
+  v=0.8 m/s: crash reactive 0% / wm 7%
+  v=1.0 m/s: crash reactive 0% / wm 3%
+  v=1.2 m/s: crash reactive 5% / wm 0%
+  v=1.4 m/s: crash reactive 38% / wm 0%
+  v=1.6 m/s: crash reactive 63% / wm 10%
+[INFO] saved src/output/speed_sweep_pybullet_shipped.png
+SPEED-SWEEP OK: 60 single-pillar courses/speed — crash (reactive/wm) at 0.8 m/s = 0%/7%; at 1.6 m/s = 63%/10% — reaction pays a distance, anticipation pays time

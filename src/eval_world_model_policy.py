@@ -148,11 +148,13 @@ def main() -> None:
     ap.add_argument("--seeds", type=int, default=100)
     ap.add_argument("--seed0", type=int, default=1000)
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--model", default=None, help="checkpoint (default output/world_model.pth)")
     args = ap.parse_args()
     n_seeds = 10 if args.selftest else args.seeds
 
-    had_ckpt = os.path.exists(MODEL)
-    enc, pred, cheads, nhead, meta = load_or_train(device="cpu")
+    had_ckpt = os.path.exists(args.model or MODEL)
+    enc, pred, cheads, nhead, meta = load_or_train(device="cpu", path=args.model)
+    print(f"[INFO] checkpoint {args.model or MODEL}: trained on {meta.get('source', 'pybullet')}, camera {meta.get('fov_deg', 60):g} deg")
     rows = evaluate(n_seeds, args.seed0, enc, pred, cheads, nhead, meta)
 
     ip = [r for r in rows if r["in_path"]]
