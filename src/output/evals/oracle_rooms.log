@@ -1,0 +1,11 @@
+# python src/hd_oracle.py --houses 8 --house-first 16 --seeds 300  (2026-10-28)
+[INFO] house ProcTHOR-Train-16: 38 starts
+[INFO] house ProcTHOR-Train-17: 38 starts
+[INFO] house ProcTHOR-Train-18: 38 starts
+[INFO] house ProcTHOR-Train-19: 38 starts
+[INFO] house ProcTHOR-Train-20: 37 starts
+[INFO] house ProcTHOR-Train-21: 37 starts
+[INFO] house ProcTHOR-Train-22: 37 starts
+[INFO] house ProcTHOR-Train-23: 37 starts
+ORACLE OK [oracle, MPC menu (forward / lateral veers, fixed yaw)]: starts=300 survival 32%, mean flight time 5.9 s, mean distance 4.41 m, evaded at least once 99%  (36s)
+ORACLE OK [oracle + hover when boxed in]: starts=300 survival 89%, mean flight time 7.2 s, mean distance 4.34 m, evaded at least once 99%  (36s)

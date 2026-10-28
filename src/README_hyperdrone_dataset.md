@@ -175,7 +175,9 @@ python src/hd_video.py --scene rooms --house 17 --seed 1017 --policy wm --model 
 
 `--scene rooms` 不是柱子 course 的搬运：ProcTHOR 房子里几乎找不到"独立在空间中、两侧都能绕、后面还有 3 m 直路"的障碍（四栋房子各 6000 次采样只有 0–7 个，家具都靠墙），而"前方 1.3–2.6 m 有障碍"的起点基本都是带门洞的墙，绕过去是寻路问题而不是避障问题。所以室内测试定义为**生存测试**：随机起点（净空 ≥ 0.9 m、前方 ≥ 2 m 空、随机航向），策略照常"无威胁就前进、有威胁就绕"，直到第一次接触（距离场表面净空 + 0.18 m < 0.22 m）或 7.5 s；报告存活率、首次接触时间、接触前飞行距离、平均净空。两种策略用相同起点。
 
-> 泛化分析（每个 checkpoint × 每个数据域的碰撞预判 AUC、绕行排序、未来帧预测增益，含两个没有任何模型见过的域）由 `src/eval_offline.py` 生成，是 [../REPORT.md](../REPORT.md) 的核心（第 3 节）。
+> 当前的 [../REPORT.md](../REPORT.md)（英文版 [../REPORT_en.md](../REPORT_en.md)，`make_report_three.py --lang both` 同时生成两份及各自的图）只保留一组干净的对比：纯 pybullet / 纯 hyperdrone 室内 / 两者合并三种训练集训出的模型，在 pybullet 柱子避障和 hyperdrone 室内避障两个任务里的表现（`make_report_three.py` 生成）。更早的探索性结果（画风、随机外观、合并大数据集、六模型泛化网格）归档在 `src/output/report/REPORT_archive_2026-10-27.md`。
+>
+> 报告用到的辅助脚本：`eval_offline.py`（离线泛化网格：碰撞预判 AUC、绕行排序、潜变量 / 解码帧增益，报告 4.3）、`decode_compare.py`（三个模型在同一批 held-out 窗口上把预测潜变量解码成图像，与真实未来帧并排，报告 4.4；`--lang both` 出中英文两张图）、`decode_latents.py`（单个 checkpoint 的 4 个视界解码 + 每个候选命令的想象帧）、`hd_oracle.py`（室内耐久测试在 MPC 动作菜单下的上限：全知策略 32%，允许悬停 89%）、`draw_pipeline.py`（训练流程图：输入 → 网络各层尺寸与参数量 → 损失 → 输出，报告第 2 节；参数量从模块实际计算）。
 >
 > 下面两节的表是最初 100 条 course 的结果。之后把每个测试放大到 300 条 course / 60 seed 速度扫描 / 20 片密林 / 300 个室内起点（8 栋房子），并增加了"hyperdrone 画风 + 随机外观"（`hd_closed_loop.py --randomize`）这一条件；放大后的表、95% 置信区间、图和更新的结论统一放在 [../REPORT.md](../REPORT.md)，结论没有变化，另外多了一条：随机外观下 pybullet 训练的模型最鲁棒（撞击率 19–20%），hyperdrone 训练的模型 65–80%——hyperdrone 数据集的固定配色让模型过拟合外观，生成时应该开 `--randomize`。
 

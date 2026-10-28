@@ -1,0 +1,16 @@
+=== TRAIN pybullet_ref <- src/output/wm_dataset.npz ===
+[INFO] dataset src/output/wm_dataset.npz: source=pybullet, camera 60 deg
+[INFO] training on cuda: 2444 train / 580 val samples (52/12 rollouts)
+[INFO] veer-ranking widened to all rollouts (val had too few frames)
+WORLD-MODEL OK: 2444 train seqs, latent MSE@32=1.603 (no-op 2.835), AUC@4/8/16/32=0.93/0.91/0.92/0.93, now-AUC=0.84, veer-ranking=1.00 (n=45), int8 weights=81.3 KB (<512 fits), saved src/output/world_model_pybullet_ref.pth
+=== TRAIN rooms <- src/output/wm_dataset_rooms_train60.npz ===
+[INFO] dataset src/output/wm_dataset_rooms_train60.npz: source=hyperdrone, camera 60 deg
+[INFO] training on cuda: 9664 train / 2408 val samples (205/51 rollouts)
+[INFO] veer-ranking widened to all rollouts (val had too few frames)
+WORLD-MODEL OK: 9664 train seqs, latent MSE@32=0.549 (no-op 0.601), AUC@4/8/16/32=0.62/0.64/0.62/0.57, now-AUC=0.72, veer-ranking=nan (n=0), int8 weights=81.3 KB (<512 fits), saved src/output/world_model_rooms.pth
+--
+=== TRAIN pb_plus_rooms <- src/output/wm_dataset_pb_plus_rooms.npz ===
+[INFO] dataset src/output/wm_dataset_pb_plus_rooms.npz: source=hyperdrone+pybullet, camera 60 deg
+[INFO] training on cuda: 12089 train / 3007 val samples (256/64 rollouts)
+[INFO] veer-ranking widened to all rollouts (val had too few frames)
+WORLD-MODEL OK: 12089 train seqs, latent MSE@32=0.441 (no-op 0.616), AUC@4/8/16/32=0.81/0.80/0.79/0.76, now-AUC=0.81, veer-ranking=0.87 (n=45), int8 weights=81.3 KB (<512 fits), saved src/output/world_model_pb_plus_rooms.pth

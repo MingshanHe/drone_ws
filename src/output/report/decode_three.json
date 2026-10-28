@@ -1,0 +1,175 @@
+{
+  "pybullet_ref": {
+    "label": "pybullet 64 (retrained)",
+    "pybullet": {
+      "8": {
+        "gain": 0.4376548900226279,
+        "pred_mse": 0.024692149452083017,
+        "copy_mse": 0.043909245433069725
+      },
+      "32": {
+        "gain": 0.6360846046987463,
+        "pred_mse": 0.022271241930966877,
+        "copy_mse": 0.06119895508276165
+      },
+      "windows": 362,
+      "seen": true
+    },
+    "rand_pillars": {
+      "8": {
+        "gain": 0.06753620256419168,
+        "pred_mse": 0.028061045465658473,
+        "copy_mse": 0.030093442279286155
+      },
+      "32": {
+        "gain": 0.3323354010534222,
+        "pred_mse": 0.029483331836992217,
+        "copy_mse": 0.0441588963732841
+      },
+      "windows": 353,
+      "seen": false
+    },
+    "rooms_unseen": {
+      "8": {
+        "gain": -0.35206802694481687,
+        "pred_mse": 0.05078692942358262,
+        "copy_mse": 0.037562406928845625
+      },
+      "32": {
+        "gain": -0.5530205732547688,
+        "pred_mse": 0.13255876935394117,
+        "copy_mse": 0.08535544965520252
+      },
+      "windows": 358,
+      "seen": false
+    }
+  },
+  "rooms": {
+    "label": "hyperdrone rooms 256",
+    "pybullet": {
+      "8": {
+        "gain": 0.21134013582728706,
+        "pred_mse": 0.034629459539171084,
+        "copy_mse": 0.043909245433069725
+      },
+      "32": {
+        "gain": 0.2851684331872568,
+        "pred_mse": 0.0437469449491132,
+        "copy_mse": 0.06119895508276165
+      },
+      "windows": 362,
+      "seen": false
+    },
+    "rand_pillars": {
+      "8": {
+        "gain": 0.1329617816704447,
+        "pred_mse": 0.02609216457723558,
+        "copy_mse": 0.030093442279286155
+      },
+      "32": {
+        "gain": 0.27394770575451455,
+        "pred_mse": 0.03206166802317157,
+        "copy_mse": 0.0441588963732841
+      },
+      "windows": 353,
+      "seen": false
+    },
+    "rooms_unseen": {
+      "8": {
+        "gain": -0.23036470236580509,
+        "pred_mse": 0.0462154596211524,
+        "copy_mse": 0.037562406928845625
+      },
+      "32": {
+        "gain": -0.06184073204833718,
+        "pred_mse": 0.09063389314619523,
+        "copy_mse": 0.08535544965520252
+      },
+      "windows": 358,
+      "seen": false
+    }
+  },
+  "pb_plus_rooms": {
+    "label": "pybullet 64 + hyperdrone rooms 256",
+    "pybullet": {
+      "8": {
+        "gain": 0.26216006767035227,
+        "pred_mse": 0.03239799467898206,
+        "copy_mse": 0.043909245433069725
+      },
+      "32": {
+        "gain": 0.5743375141526589,
+        "pred_mse": 0.026050099351788095,
+        "copy_mse": 0.06119895508276165
+      },
+      "windows": 362,
+      "seen": true
+    },
+    "rand_pillars": {
+      "8": {
+        "gain": 0.06310735186926109,
+        "pred_mse": 0.028194324828409945,
+        "copy_mse": 0.030093442279286155
+      },
+      "32": {
+        "gain": 0.3627146584514598,
+        "pred_mse": 0.02814181735765495,
+        "copy_mse": 0.0441588963732841
+      },
+      "windows": 353,
+      "seen": false
+    },
+    "rooms_unseen": {
+      "8": {
+        "gain": -0.10382536409591814,
+        "pred_mse": 0.04146233750455206,
+        "copy_mse": 0.037562406928845625
+      },
+      "32": {
+        "gain": 0.08724445720563268,
+        "pred_mse": 0.07790865978049166,
+        "copy_mse": 0.08535544965520252
+      },
+      "windows": 358,
+      "seen": false
+    }
+  },
+  "samples": [
+    {
+      "domain": "pybullet",
+      "rollout": 38,
+      "t": 40,
+      "action": "forward"
+    },
+    {
+      "domain": "pybullet",
+      "rollout": 46,
+      "t": 4,
+      "action": "forward"
+    },
+    {
+      "domain": "rand_pillars",
+      "rollout": 18,
+      "t": 0,
+      "action": "forward"
+    },
+    {
+      "domain": "rand_pillars",
+      "rollout": 32,
+      "t": 6,
+      "action": "forward"
+    },
+    {
+      "domain": "rooms_unseen",
+      "rollout": 8,
+      "t": 18,
+      "action": "forward"
+    },
+    {
+      "domain": "rooms_unseen",
+      "rollout": 38,
+      "t": 18,
+      "action": "forward"
+    }
+  ]
+}

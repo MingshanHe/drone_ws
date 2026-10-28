@@ -62,6 +62,8 @@ MODELS = [  # tag, checkpoint, label, domains it was trained on
     ("mixed_big_pbstyle", "world_model_mixed_big_pbstyle.pth", "hyperdrone 256, pb look", {"pb_pillars", "rooms_train"}),
     ("pb_plus_big", "world_model_pb_plus_big.pth", "pybullet + hyperdrone hd look", {"pybullet", "hd_pillars", "rooms_train"}),
     ("pb_plus_big_pbstyle", "world_model_pb_plus_big_pbstyle.pth", "pybullet + hyperdrone pb look", {"pybullet", "pb_pillars", "rooms_train"}),
+    ("rooms", "world_model_rooms.pth", "hyperdrone rooms 256", {"rooms_train"}),
+    ("pb_plus_rooms", "world_model_pb_plus_rooms.pth", "pybullet 64 + hyperdrone rooms 256", {"pybullet", "rooms_train"}),
 ]
 PER_ROLLOUT = ("frames", "actions", "act_id", "seg", "dists", "pos", "pillars", "in_path", "speed", "cf_labels", "cf_visible", "scene_type")
 
@@ -257,10 +259,12 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--models", nargs="*", default=[m[0] for m in MODELS])
     ap.add_argument("--epochs", type=int, default=6, help="decoder epochs per (checkpoint, domain)")
+    ap.add_argument("--domains", nargs="*", default=[d[0] for d in DOMAINS])
+    ap.add_argument("--out", default="generalization", help="basename of the json/md/png outputs")
     args = ap.parse_args()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     os.makedirs(REP, exist_ok=True)
-    domains = [(k, lbl, load_domain(f, flt)) for k, lbl, f, flt in DOMAINS if os.path.exists(os.path.join(OUT_DIR, f))]
+    domains = [(k, lbl, load_domain(f, flt)) for k, lbl, f, flt in DOMAINS if k in args.domains and os.path.exists(os.path.join(OUT_DIR, f))]
     print(f"[INFO] {len(domains)} domains: " + ", ".join(f"{lbl} ({d['frames'].shape[0]} rollouts)" for _, lbl, d in domains))
     results = {}
     rng = np.random.default_rng(0)
@@ -283,7 +287,7 @@ def main() -> None:
             print(f"  {tag:20s} {dlabel:45s} auc@32 {m['auc'][-1]:.2f}  now {m['now_auc']:.2f}  rank {m['cf_rank']:.2f} (n={m['n_rank']})  "
                   f"latent gain {m['latent_gain']:+.2f}  frame gain {m['frame_gain']:+.2f}{'  *seen' if m['seen'] else ''}")
         cross_figure(tag, label, enc, pred, None, cross, device, rng)
-    with open(os.path.join(REP, "generalization.json"), "w") as f:
+    with open(os.path.join(REP, f"{args.out}.json"), "w") as f:
         json.dump(results, f, indent=2)
     if len(results) == len(MODELS):
         heatmaps(results, [m[0] for m in MODELS], [d[0] for d in domains])
@@ -311,9 +315,9 @@ def main() -> None:
             lines.append(f"| {ml[tag]} | " + " | ".join(cells) + " |")
         lines.append("")
     lines.append("\\* = 该数据域参与了这个 checkpoint 的训练（in-sample）；其余单元格是训练时没见过的数据。")
-    with open(os.path.join(REP, "generalization.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(REP, f"{args.out}.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
-    print("GENERALIZATION OK ->", os.path.join(REP, "generalization.md"))
+    print("GENERALIZATION OK ->", os.path.join(REP, f"{args.out}.md"))
 
 
 if __name__ == "__main__":

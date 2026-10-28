@@ -1,433 +1,195 @@
-# hyperdrone 数据 × pybullet 世界模型：数据、训练、闭环测试与预测可视化
+# 三种训练集 × 两个避障任务：世界模型的表现对比
 
-本报告汇总 2026-10-27 在 `drone_ws` 上做的实验：用 hyperdrone（hyperlux 光追 + L2F/RAPTOR 动力学）生成与 nanodrone-ai 第 29 课同格式的 world-model 数据集（柱子场景 + ProcTHOR 真实房间），用原课程的 `train_world_model.py` 训练 V-JEPA 风格的潜变量世界模型和 MPC 避障策略，然后在 **pybullet 柱子环境**和 **hyperdrone 柱子环境**（两种画风）里闭环测试，并把模型在潜空间里的预测解码成图片。生成器、评估脚本和每个参数的说明见 [src/README_hyperdrone_dataset.md](src/README_hyperdrone_dataset.md)。
+[English version / 英文版](REPORT_en.md)
 
-## 1. 数据集
+同一套 world model（nanodrone-ai 第 29 课的 V-JEPA 风格潜变量模型 + 碰撞头 + MPC 避障策略，`train_world_model.py --epochs 80`，三个模型完全相同的训练脚本与超参）分别在三种数据集上训练，然后在两个避障任务里闭环测试。所有脚本和每个参数的说明在 [src/README_hyperdrone_dataset.md](src/README_hyperdrone_dataset.md)；更早的探索性实验（两个仿真器各自的柱子画风、随机外观、合并大数据集等）归档在 [src/output/report/REPORT_archive_2026-10-27.md](src/output/report/REPORT_archive_2026-10-27.md)。
 
-| 文件 | rollout | 柱子 / 房间 | 房子 | 相机 | 柱子画风 | 阳性率@32 | 大小 |
-|---|---|---|---|---|---|---|---|
-| `wm_dataset.npz`（pybullet 原版） | 64 | 64 / 0 | – | 60° body | pybullet 真渲染 | 0.37 | 4.2 MB |
-| `wm_dataset_hyperdrone.npz` | 64 | 64 / 0 | – | 60° body | hyperdrone | 0.30 | 8.8 MB |
-| `wm_dataset_hyperdrone_tello40.npz` | 64 | 64 / 0 | – | 40° level | hyperdrone | 0.30 | 2.7 MB |
-| `wm_dataset_hyperdrone_tello40_rand.npz` | 64 | 64 / 0 | – | 40° level，随机化 | hyperdrone | 0.38 | 2.9 MB |
-| `wm_dataset_mixed_tello40.npz` | 64 | 32 / 32 | 4 | 40° level | hyperdrone | 0.27 | 12.9 MB |
-| `wm_dataset_mixed_60body.npz` | 64 | 32 / 32 | 4 | 60° body | hyperdrone | 0.27 | 18.7 MB |
-| `wm_dataset_mixed_big_60body.npz` | 256 | 128 / 128 | 16 | 60° body | hyperdrone | 0.28 | 72.9 MB |
-| `wm_dataset_mixed_big_60body_pbstyle.npz` | 256 | 128 / 128 | 16 | 60° body | pybullet 画风 | 0.28 | 77.5 MB |
-| `wm_dataset_pb_plus_big.npz` | 320 | 192 / 128 | 16 | 60° body | 合并 | 0.30 | 77.1 MB |
-| `wm_dataset_pb_plus_big_pbstyle.npz` | 320 | 192 / 128 | 16 | 60° body | 合并 | 0.30 | – |
+## 1. 三种训练集
 
-每条 rollout 120 步 @ 48 Hz，64×64 RGB，六个指令（forward / slow / veer_left / veer_right / climb / hover）按约 1 s 的 held segment 随机切换，标签是"k 步内到最近障碍的平面距离 < 0.7 / 0.35 m"。柱子 course 与 pybullet 生成器共用随机数，同一 seed 同一布局；房间用 0.1 m 占据栅格 + 距离场打标签（`src/wm_rooms.py`）。
+| 训练集 | 文件 | 规模 | 场景 | 大小 |
+|---|---|---|---|---|
+| A. 纯 pybullet | `wm_dataset.npz` | 64 条 × 120 步 | 柱子 64 / 房间 0（0 栋） | 4 MB |
+| B. 纯 hyperdrone 室内 | `wm_dataset_rooms_train60.npz` | 256 条 × 120 步 | 柱子 0 / 房间 256（16 栋） | 106 MB |
+| C. pybullet + hyperdrone 室内 | `wm_dataset_pb_plus_rooms.npz` | 320 条 × 120 步 | 柱子 64 / 房间 256（16 栋） | 110 MB |
 
-同一批柱子 course 的三种画面（左 pybullet，中 hyperdrone 的 pybullet 画风，右 hyperdrone 默认画风）：
+- **A. 纯 pybullet**：原课程 `gen_wm_dataset.py` 生成的柱子 course（gym-pybullet-drones，CF2X + PID，64×64、60° 机体相机）。
+- **B. 纯 hyperdrone 室内**：`gen_wm_dataset_hyperdrone.py --scene rooms`，ProcTHOR 目录 0–15 号共 16 栋家具房屋里各 16 条 rollout（hyperlux 光追，crazyflie + RAPTOR，同样的 64×64、60° 机体相机）；"危险"标签来自每栋房子在飞行高度的占据栅格 / 距离场（`wm_rooms.py`）。
+- **C. 合并**：A 与 B 按 rollout 拼接（`merge_datasets.py`）。
 
-![pillar styles](src/output/gallery_pillars_styles.png)
+三者共享同一套动作词表（forward / slow / veer_left / veer_right / climb / hover，约 1 s 的 held segment）、同样的 4/8/16/32 步（83–667 ms）碰撞标签和反事实标签格式。
 
-大混合集 16 栋房子各一条 rollout：
+## 2. 训练（各自 held-out rollout 上的离线指标）
 
-![rooms](src/output/gallery_rooms_big.png)
-
-## 2. 训练
-
-全部用原课程的 `train_world_model.py --epochs 80`（编码器 → 64 维潜变量；动作条件预测器预测 +4/8/16/32 步的潜变量；碰撞头；danger-now 头），只加了 `--data/--out`、CUDA 和"从数据集读取相机 FOV / 预存反事实标签"。离线指标在各自 held-out rollout 上：
-
-| checkpoint | 训练数据 | 训练序列 | latent MSE@32（no-op） | AUC@4/8/16/32 | now-AUC | veer-ranking |
+| 训练集 | checkpoint | 训练 / 验证窗口 | latent MSE@32（no-op） | AUC@4/8/16/32 | now-AUC | veer-ranking |
 |---|---|---|---|---|---|---|
-| `world_model.pth`（仓库自带） | pybullet 64（上游训练） | – | – | – | – | – |
-| `world_model_pybullet_ref.pth` | pybullet 64 | 2444 | 1.603 (2.835) | 0.93 / 0.91 / 0.92 / 0.93 | 0.84 | 1.00 (45) |
-| `world_model_mixed_big.pth` | hyperdrone 256（hd 画风） | 9643 | 1.154 (1.897) | 0.91 / 0.91 / 0.90 / 0.87 | 0.84 | 1.00 (20) |
-| `world_model_mixed_big_pbstyle.pth` | hyperdrone 256（pb 画风） | 9643 | 1.054 (1.880) | 0.86 / 0.83 / 0.82 / 0.84 | 0.81 | 1.00 (100) |
-| `world_model_pb_plus_big.pth` | pybullet 64 + hd 画风 256 | 12094 | 0.721 (1.439) | 0.91 / 0.89 / 0.89 / 0.86 | 0.86 | 0.97 (146) |
-| `world_model_pb_plus_big_pbstyle.pth` | pybullet 64 + pb 画风 256 | 12094 | 0.582 (1.439) | 0.90 / 0.89 / 0.88 / 0.86 | 0.85 | 0.91 (145) |
+| A. 纯 pybullet | `world_model_pybullet_ref.pth` | 2444 / 580 | 1.603 (2.835) | 0.93/0.91/0.92/0.93 | 0.84 | 1.00 (n=45) |
+| B. 纯 hyperdrone 室内 | `world_model_rooms.pth` | 9664 / 2408 | 0.549 (0.601) | 0.62/0.64/0.62/0.57 | 0.72 | nan (n=0) |
+| C. pybullet + hyperdrone 室内 | `world_model_pb_plus_rooms.pth` | 12089 / 3007 | 0.441 (0.616) | 0.81/0.80/0.79/0.76 | 0.81 | 0.87 (n=45) |
 
-## 3. 世界模型的预测能力与跨域泛化（核心）
+训练流程（`train_world_model.py`）从数据集到 checkpoint：64×64 的画面经三层卷积编码器和保留左右方位的条带池化得到 64 维潜变量；动作条件预测器以残差形式预测 4/8/16/32 步后的潜变量；碰撞头从预测的潜变量读出"k 步内进入 0.7 m / 0.35 m"的概率，danger-now 头从当前潜变量读出"现在就危险"。预测目标来自编码器的 EMA 副本（JEPA 式，不用像素损失），碰撞头还用数据集里 6 个候选命令的反事实 oracle 监督。整套模型 83k 参数（int8 约 81 KB）。图中上排是在线模型，下排是同一窗口的目标（EMA 潜变量、真实距离标签），每条绿色竖向双箭头就是上面的预测与下面的目标之间的一项损失；画面、潜变量条和概率格子都来自一个 held-out 窗口和模型 A 的实际前向。
 
-真机飞行关心的不是某个 checkpoint 能不能在某一个仿真器的柱子 course 上活下来，而是它带的世界模型在**没见过的数据**上还能不能预测：能不能预见碰撞（碰撞头）、能不能分辨往哪边绕更安全（动作条件化）、潜变量是不是真的随着未来画面在动（未来帧预测）。`src/eval_offline.py` 把每个 checkpoint 放到每个数据域的 held-out 帧上打分，并标出该域是否参与过训练（\*）。
+![训练流程](src/output/report/pipeline_three.png)
 
-数据域：pybullet 柱子；hyperdrone 柱子（hd 画风）；hyperdrone 柱子（pb 画风）；**hyperdrone 柱子，随机外观（没有任何模型见过）**；hyperdrone 房间（训练用的 0–15 号房子）；**hyperdrone 房间，16–23 号房子（没有任何模型见过）**。每个域取 64 条 rollout（7680 帧）。没有真实 Tello 画面可用（仓库里只有标定板照片），所以"随机外观"和"未见过的房子"是本报告里最接近真机泛化的代理。
+## 3. 两个测试任务
 
-指标：
+**pybullet 柱子避障**（原课程的记分板，`eval_world_model_policy.py` / `speed_sweep.py`，conda env `drone_python`）：300 条随机 course（210 条正前方有柱子，90 条直飞安全），每条 360 步、3 m 终点线，策略每 1/12 s 从 64×64 画面决策；到柱心平面距离 < 0.22 m 记为穿越。另有单柱子速度扫描：每档速度 60 条 course，巡航 0.8 → 1.6 m/s。
 
-| 指标 | 含义 | 随机水平 |
-|---|---|---|
-| AUC@k | 从预测的潜变量判断"k 步内会进入 0.7 m 危险环"的 ROC-AUC，k = 4/8/16/32（83–667 ms），只在指令被持有的窗口上算 | 0.5 |
-| danger-now AUC | danger-now 头（反应式信号）的 AUC | 0.5 |
-| 安全绕行排序 | 反事实标签说一侧绕行危险、另一侧安全（两侧都在视野内）的帧上，模型把安全一侧排得更安全的比例；房间用距离场的标签 | 0.5 |
-| 潜变量预测增益 | 1 − MSE(ẑ_{t+32}, z_{t+32}) / MSE(z_t, z_{t+32})：预测器解释了多少潜变量在 32 步内的变化 | 0 |
-| 解码未来帧增益 | 冻结编码器，在该域 80% 的 rollout 上拟合一个小解码器，在另外 20% 上算 1 − MSE(decode(ẑ_{t+32}), x_{t+32}) / MSE(x_t, x_{t+32})：解码出的预测帧比"复制当前帧"好多少 | 0 |
+**hyperdrone 室内避障**（`hd_closed_loop.py --scene rooms`，conda env `dreamer`）：在训练从未用过的 ProcTHOR 16–23 号共 8 栋房子里随机取 300 个起点（净空 ≥ 0.9 m、前方 ≥ 2 m 空、随机航向），策略照常"无威胁就前进、有威胁就绕"，直到第一次接触障碍（距离场表面净空 + 0.18 m < 0.22 m，与柱子同一判定）或 7.5 s 到时。ProcTHOR 房子里几乎不存在柱子式的 course（独立障碍 + 3 m 直路 + 两侧可绕），所以室内用生存测试。
 
-![generalization](src/output/report/results_generalization.png)
+两个任务里 reactive 基线（同一 checkpoint 的 danger-now 头 + 特权绕行方向）和 wm 策略共用编码器，所以都随训练集变化；wm 策略才是世界模型的用法。
+
+## 4. 结果
+
+![results](src/output/report/results_three.png)
+
+### 4.1 pybullet 柱子避障
+
+| 训练集 | 撞击率 reactive → wm（±95% CI） | 最小净空 | wm 比 reactive 提前触发 | 清场 course 误触发 | 速度扫描 wm 撞击率 @0.8/1.0/1.2/1.4/1.6 m/s |
+|---|---|---|---|---|---|
+| A. 纯 pybullet | 0% → **11%** (±4) | 0.41 → 0.38 m | 335 ms (n=210) | 0% → 0% | 7% / 2% / 0% / 3% / 2% |
+| B. 纯 hyperdrone 室内 | 61% → **82%** (±5) | 0.20 → 0.15 m | 276 ms (n=91) | 1% → 100% | 85% / 78% / 78% / 68% / 70% |
+| C. pybullet + hyperdrone 室内 | 2% → **20%** (±5) | 0.42 → 0.32 m | 369 ms (n=210) | 100% → 100% | 13% / 45% / 27% / 12% / 20% |
+
+### 4.2 hyperdrone 室内避障（未见过的房子）
+
+| 训练集 | 存活率 reactive → wm（±95% CI） | 首次接触时间 | 平均飞行时间 | 平均飞行距离 | 平均净空 | 至少绕行一次 |
+|---|---|---|---|---|---|---|
+| A. 纯 pybullet | 12% → **17%** (±4) | 4.3 → 4.7 s | 4.7 → 5.2 s | 3.56 → 3.73 m | 1.05 → 1.06 m | 43% → 84% |
+| B. 纯 hyperdrone 室内 | 19% → **16%** (±4) | 4.8 → 4.9 s | 5.3 → 5.3 s | 3.90 → 3.81 m | 1.02 → 1.02 m | 81% → 88% |
+| C. pybullet + hyperdrone 室内 | 13% → **16%** (±4) | 4.7 → 4.7 s | 5.1 → 5.1 s | 3.75 → 3.73 m | 1.02 → 1.01 m | 73% → 88% |
+
+**上限检验（`hd_oracle.py`）。** 同样的 300 个起点，换成一个直接读取房子距离场、不看图像也不用世界模型的特权策略，但限制在 wm 策略同样的动作菜单里：前进，或 0.5 s 的左右平移，偏航固定。wm 策略的选择器只会在两个平移之间挑，所以这就是任何视觉模型在这个菜单里能做到的最好成绩。第二个变体允许在所有移动候选都会在 0.3 m 内接触时悬停。
+
+| 策略 | 存活率（±95% CI） | 平均飞行时间 | 平均飞行距离 | 至少绕行一次 |
+|---|---|---|---|---|
+| oracle，MPC 动作菜单（前进 / 0.5 s 左右平移、偏航固定） | **32%** (±5) | 5.9 s | 4.41 m | 99% |
+| oracle + 被堵住就悬停 | **89%** (±4) | 7.2 s | 4.34 m | 99% |
+
+### 4.3 补充：离线预测指标（held-out 帧；\* = 该域参与了训练）
+
+数据域：pybullet 柱子；hyperdrone 柱子，随机外观（没有任何模型见过）；hyperdrone 房间 0–15（B、C 的训练域）；hyperdrone 房间 16–23（未见过）。指标：碰撞预判 AUC（0.5 = 随机）、安全绕行方向排序准确率（0.5 = 随机）、潜变量 / 解码未来帧相对"未来 = 现在"的预测增益（0 = 没有预测能力）。
 
 **碰撞预判 AUC@32（0.5 = 随机）**
 
-| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, hd look | hyperdrone pillars, pb look | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
-|---|---|---|---|---|---|---|
-| pybullet 64 (shipped) | 0.95\* | 0.93 | 0.94 | 0.86 | 0.57 | 0.51 |
-| pybullet 64 (retrained) | 0.95\* | 0.90 | 0.94 | 0.85 | 0.51 | 0.46 |
-| hyperdrone 256, hd look | 0.48 | 0.98\* | 0.71 | 0.51 | 0.94\* | 0.65 |
-| hyperdrone 256, pb look | 0.72 | 0.44 | 0.98\* | 0.53 | 0.94\* | 0.66 |
-| pybullet + hyperdrone hd look | 0.96\* | 0.99\* | 0.96 | 0.75 | 0.94\* | 0.68 |
-| pybullet + hyperdrone pb look | 0.96\* | 0.73 | 0.99\* | 0.62 | 0.96\* | 0.70 |
+| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
+|---|---|---|---|---|
+| pybullet 64 (retrained) | 0.95\* | 0.85 | 0.51 | 0.46 |
+| hyperdrone rooms 256 | 0.44 | 0.57 | 0.76\* | 0.69 |
+| pybullet 64 + hyperdrone rooms 256 | 0.96\* | 0.81 | 0.77\* | 0.69 |
 
 **碰撞预判 AUC@8**
 
-| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, hd look | hyperdrone pillars, pb look | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
-|---|---|---|---|---|---|---|
-| pybullet 64 (shipped) | 0.95\* | 0.91 | 0.95 | 0.86 | 0.56 | 0.46 |
-| pybullet 64 (retrained) | 0.95\* | 0.85 | 0.95 | 0.82 | 0.48 | 0.43 |
-| hyperdrone 256, hd look | 0.37 | 0.99\* | 0.60 | 0.48 | 0.95\* | 0.62 |
-| hyperdrone 256, pb look | 0.70 | 0.41 | 0.99\* | 0.46 | 0.91\* | 0.61 |
-| pybullet + hyperdrone hd look | 0.96\* | 0.99\* | 0.95 | 0.61 | 0.96\* | 0.64 |
-| pybullet + hyperdrone pb look | 0.97\* | 0.70 | 0.99\* | 0.46 | 0.96\* | 0.69 |
+| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
+|---|---|---|---|---|
+| pybullet 64 (retrained) | 0.95\* | 0.82 | 0.48 | 0.43 |
+| hyperdrone rooms 256 | 0.45 | 0.58 | 0.71\* | 0.66 |
+| pybullet 64 + hyperdrone rooms 256 | 0.96\* | 0.77 | 0.74\* | 0.68 |
 
 **danger-now AUC**
 
-| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, hd look | hyperdrone pillars, pb look | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
-|---|---|---|---|---|---|---|
-| pybullet 64 (shipped) | 0.88\* | 0.73 | 0.89 | 0.63 | 0.43 | 0.40 |
-| pybullet 64 (retrained) | 0.87\* | 0.55 | 0.88 | 0.54 | 0.41 | 0.41 |
-| hyperdrone 256, hd look | 0.42 | 0.95\* | 0.53 | 0.50 | 0.94\* | 0.69 |
-| hyperdrone 256, pb look | 0.57 | 0.39 | 0.94\* | 0.43 | 0.94\* | 0.69 |
-| pybullet + hyperdrone hd look | 0.90\* | 0.96\* | 0.83 | 0.55 | 0.96\* | 0.70 |
-| pybullet + hyperdrone pb look | 0.91\* | 0.47 | 0.95\* | 0.44 | 0.95\* | 0.70 |
+| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
+|---|---|---|---|---|
+| pybullet 64 (retrained) | 0.87\* | 0.54 | 0.41 | 0.41 |
+| hyperdrone rooms 256 | 0.45 | 0.52 | 0.72\* | 0.69 |
+| pybullet 64 + hyperdrone rooms 256 | 0.90\* | 0.67 | 0.71\* | 0.74 |
 
 **安全绕行方向排序准确率（0.5 = 随机）**
 
-| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, hd look | hyperdrone pillars, pb look | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
-|---|---|---|---|---|---|---|
-| pybullet 64 (shipped) | 0.89\* | 0.96 | 0.95 | 0.97 | 0.40 | 0.21 |
-| pybullet 64 (retrained) | 0.93\* | 0.94 | 0.93 | 0.89 | 0.45 | 0.21 |
-| hyperdrone 256, hd look | 0.83 | 0.96\* | 0.93 | 0.72 | 0.72\* | 0.27 |
-| hyperdrone 256, pb look | 0.87 | 0.76 | 0.93\* | 0.85 | 0.85\* | 0.39 |
-| pybullet + hyperdrone hd look | 0.93\* | 0.94\* | 0.92 | 0.86 | 0.89\* | 0.58 |
-| pybullet + hyperdrone pb look | 0.84\* | 0.34 | 0.88\* | 0.41 | 0.89\* | 0.91 |
+| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
+|---|---|---|---|---|
+| pybullet 64 (retrained) | 0.93\* | 0.89 | 0.45 | 0.21 |
+| hyperdrone rooms 256 | 0.57 | 0.35 | 0.62\* | 0.18 |
+| pybullet 64 + hyperdrone rooms 256 | 0.85\* | 0.50 | 0.50\* | 0.48 |
 
 **潜变量预测增益 @32（0 = 不比「未来 = 现在」好）**
 
-| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, hd look | hyperdrone pillars, pb look | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
-|---|---|---|---|---|---|---|
-| pybullet 64 (shipped) | +0.78\* | -0.06 | +0.55 | +0.46 | -1.49 | -1.32 |
-| pybullet 64 (retrained) | +0.80\* | -0.25 | +0.53 | +0.43 | -1.44 | -1.10 |
-| hyperdrone 256, hd look | +0.18 | +0.83\* | +0.28 | +0.28 | +0.51\* | -0.09 |
-| hyperdrone 256, pb look | +0.07 | -0.06 | +0.86\* | +0.06 | +0.48\* | -0.15 |
-| pybullet + hyperdrone hd look | +0.73\* | +0.83\* | +0.68 | +0.41 | +0.65\* | -0.22 |
-| pybullet + hyperdrone pb look | +0.78\* | +0.42 | +0.86\* | +0.25 | +0.46\* | -0.24 |
+| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
+|---|---|---|---|---|
+| pybullet 64 (retrained) | +0.80\* | +0.43 | -1.44 | -1.10 |
+| hyperdrone rooms 256 | -0.01 | -0.06 | +0.07\* | -0.00 |
+| pybullet 64 + hyperdrone rooms 256 | +0.66\* | +0.11 | -0.01\* | +0.01 |
 
 **解码未来帧增益 @32（0 = 不比复制当前帧好）**
 
-| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, hd look | hyperdrone pillars, pb look | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
-|---|---|---|---|---|---|---|
-| pybullet 64 (shipped) | +0.63\* | +0.49 | +0.44 | +0.31 | -1.27 | -1.05 |
-| pybullet 64 (retrained) | +0.64\* | +0.38 | +0.48 | +0.33 | -0.59 | -0.55 |
-| hyperdrone 256, hd look | +0.38 | +0.52\* | +0.16 | +0.39 | +0.33\* | -0.07 |
-| hyperdrone 256, pb look | +0.32 | +0.33 | +0.63\* | +0.36 | +0.39\* | -0.23 |
-| pybullet + hyperdrone hd look | +0.63\* | +0.49\* | +0.47 | +0.39 | +0.41\* | -0.57 |
-| pybullet + hyperdrone pb look | +0.64\* | +0.34 | +0.55\* | +0.30 | +0.38\* | -0.04 |
+| 训练数据 \ 数据域 | pybullet pillars | hyperdrone pillars, random appearance (unseen) | hyperdrone rooms, houses 0-15 | hyperdrone rooms, houses 16-23 (unseen) |
+|---|---|---|---|---|
+| pybullet 64 (retrained) | +0.64\* | +0.33 | -0.58 | -0.54 |
+| hyperdrone rooms 256 | +0.28 | +0.27 | +0.12\* | -0.06 |
+| pybullet 64 + hyperdrone rooms 256 | +0.57\* | +0.37 | +0.10\* | +0.04 |
 
 \* = 该数据域参与了这个 checkpoint 的训练（in-sample）；其余单元格是训练时没见过的数据。
 
-### 3.1 每个模型在六个数据域上预测的未来帧
+### 4.4 解码的未来帧：预测 vs 真实
 
-每行一个数据域，列为：当前帧 | 预测 +8 | 预测 +32 | 真实 +8 | 真实 +32（解码器按域拟合，指令取实际飞行的那个）。看柱子/家具的位置和大小是否按指令移动，不要看细节。
+世界模型预测的是下一步的潜变量，不是像素。为了看每个模型"想象"了什么，对每个模型 × 数据域各拟合一个小解码器（64 维潜变量 → 64×64 RGB，编码器冻结，用该域 80% 的 rollout），然后在剩下 20% 的窗口上，把实际飞行命令对应的预测潜变量在 +8 和 +32 步（167 / 667 ms）解码出来，与真实的未来帧并排（`decode_compare.py`）。三个模型看的是同一批窗口。表里的数字是解码未来帧增益 1 − MSE(decode(ẑ₊ₖ), x₊ₖ) / MSE(xₜ, x₊ₖ)：0 表示不比复制当前帧好，负数表示更差（\* = 该域参与了训练）。注意：预测器训练时对齐的是 EMA 目标编码器，其权重没有保存，解码器只能用在线编码器的潜变量拟合，所以解码结果在 64 维潜变量本身的信息上限之外还带着这一点失配，看到的应是位置正确的模糊形状，而不是照片。
 
-**pybullet 64（仓库自带权重）**
-
-![pred_cross pybullet_shipped](src/output/report/pred_cross_pybullet_shipped.png)
-
-**pybullet 64（同脚本重训）**
-
-![pred_cross pybullet_ref](src/output/report/pred_cross_pybullet_ref.png)
-
-**hyperdrone 256，hd 画风**
-
-![pred_cross mixed_big](src/output/report/pred_cross_mixed_big.png)
-
-**hyperdrone 256，pb 画风**
-
-![pred_cross mixed_big_pbstyle](src/output/report/pred_cross_mixed_big_pbstyle.png)
-
-**pybullet 64 + hd 画风 256**
-
-![pred_cross pb_plus_big](src/output/report/pred_cross_pb_plus_big.png)
-
-**pybullet 64 + pb 画风 256**
-
-![pred_cross pb_plus_big_pbstyle](src/output/report/pred_cross_pb_plus_big_pbstyle.png)
-
-
-### 3.2 把潜变量解码回图片：持有指令下的预测，以及六个候选指令的想象
-
-世界模型预测的是下一时刻的 64 维潜变量，不是像素。为了看它，`src/decode_latents.py` 冻结每个 checkpoint 的编码器，在对应数据集上训一个小解码器（潜变量 → 64×64），再把当前帧的 z、预测器给出的 z_hat(+4/8/16/32)、以及同一帧下六个候选指令的 z_hat(+32) 解码出来，和真实未来帧并排。注意预测器训练时对齐的是 EMA 目标编码器（checkpoint 里没有保存），解码器拟合的是在线编码器的潜变量，所以解码出来的预测除了 64 维本身的信息瓶颈，还带有这一点错位：看位置和尺寸，不要看细节。
-
-held-out 窗口上解码预测与真实未来帧的像素 MSE（对照"未来 = 现在"的复制基线）：
-
-| checkpoint → data | reconstruction MSE | decoded prediction MSE @4/8/16/32 | copy baseline MSE @4/8/16/32 |
+| 训练集 \ 数据域（增益 @8 / @32） | pybullet 柱子 | hyperdrone 柱子，随机外观（未见） | hyperdrone 房间 16–23（未见） |
 |---|---|---|---|
-| pybullet 自带权重 → pybullet 数据 | 0.0128 | 0.0204 / 0.0291 / 0.0330 / 0.0308 | 0.0306 / 0.0438 / 0.0531 / 0.0534 |
-| pybullet 重训 → pybullet 数据 | 0.0125 | 0.0207 / 0.0288 / 0.0332 / 0.0304 | 0.0306 / 0.0438 / 0.0531 / 0.0534 |
-| hyperdrone 大混合（hd 画风）→ 自己的数据 | 0.0242 | 0.0320 / 0.0398 / 0.0469 / 0.0541 | 0.0246 / 0.0381 / 0.0521 / 0.0618 |
-| hyperdrone 大混合（pb 画风）→ 自己的数据 | 0.0265 | 0.0334 / 0.0407 / 0.0497 / 0.0564 | 0.0280 / 0.0440 / 0.0611 / 0.0731 |
-| pybullet + hd 画风合并 → 自己的数据 | 0.0164 | 0.0248 / 0.0323 / 0.0388 / 0.0453 | 0.0266 / 0.0405 / 0.0536 / 0.0617 |
-| pybullet 自带权重 → hyperdrone hd 画风数据（跨域，解码器沿用 pybullet 的） | 0.0705 | 0.0780 / 0.0910 / 0.1193 / 0.1736 | 0.0246 / 0.0381 / 0.0521 / 0.0618 |
-| hyperdrone pb 画风权重 → pybullet 数据（跨域，解码器沿用 hyperdrone 的） | 0.0284 | 0.0317 / 0.0392 / 0.0508 / 0.0596 | 0.0306 / 0.0438 / 0.0531 / 0.0534 |
+| A. 纯 pybullet | +0.44 / +0.64\* | +0.07 / +0.33 | -0.35 / -0.55 |
+| B. 纯 hyperdrone 室内 | +0.21 / +0.29 | +0.13 / +0.27 | -0.23 / -0.06 |
+| C. pybullet + hyperdrone 室内 | +0.26 / +0.57\* | +0.06 / +0.36 | -0.10 / +0.09 |
 
-怎么读这张表：pybullet 模型（自带与重训）在 pybullet 数据上，解码出的预测在四个时域都明显好于"未来 = 现在"的复制基线（0.030 对 0.021，0.053 对 0.030），说明潜变量里确实有运动信息；hyperdrone 大混合模型只在 +16/+32 步赢过复制基线——它的解码器重建误差本身就有 0.024，因为房间画面比柱子复杂得多，64 维潜变量装不下细节，这不等于预测器没学到东西（它的 latent MSE 相对 no-op 的提升在离线指标里是清楚的）。两行跨域最能说明问题：pybullet 权重看 hyperdrone 画面，连当前帧都重建不出来（0.07，比复制基线差三倍），它的潜空间对这些画面没有可用的表达；反过来 hyperdrone pb 画风权重看 pybullet 画面，预测和复制基线打平，是"看得懂一半"的状态，和闭环里 54% 的撞击率对应。
+![解码的未来帧](src/output/report/decode_three.png)
 
-**pybullet 重训权重 → pybullet 数据 — 持有指令下的预测 vs 真实未来**
+## 5. 过程视频
 
-![pred ref_pybullet](src/output/report/pred_ref_pybullet.png)
+pybullet 4 行柱子森林（`forest_demo.py --rows 4`，左俯视轨迹 + 右机载画面）：
 
-**pybullet 重训权重 → pybullet 数据 — 同一帧下六个候选指令在 +32 步的想象，以及碰撞头给出的 P(warn)/P(crit)**
+**A. 纯 pybullet** — [mp4](src/output/report/forest_pb_ref_wm-mpc.mp4)
 
-![actions ref_pybullet](src/output/report/actions_ref_pybullet.png)
+![A. 纯 pybullet](src/output/report/forest_pb_ref_wm-mpc.gif)
 
+**B. 纯 hyperdrone 室内** — [mp4](src/output/report/forest_pb_rooms_wm-mpc.mp4)
 
-**pybullet 自带权重 → pybullet 数据 — 持有指令下的预测 vs 真实未来**
+![B. 纯 hyperdrone 室内](src/output/report/forest_pb_rooms_wm-mpc.gif)
 
-![pred shipped_pybullet](src/output/report/pred_shipped_pybullet.png)
+**C. 合并** — [mp4](src/output/report/forest_pb_pb_plus_rooms_wm-mpc.mp4)
 
-**pybullet 自带权重 → pybullet 数据 — 同一帧下六个候选指令在 +32 步的想象，以及碰撞头给出的 P(warn)/P(crit)**
+![C. 合并](src/output/report/forest_pb_pb_plus_rooms_wm-mpc.gif)
 
-![actions shipped_pybullet](src/output/report/actions_shipped_pybullet.png)
 
+hyperdrone 室内（17 号房子，seed 1017，同一起点；左侧占据栅格地图 + 轨迹，右侧策略看到的 64×64 画面）：
 
-**hyperdrone 大混合权重 → 自己的数据（柱子与房间交替） — 持有指令下的预测 vs 真实未来**
+**A. 纯 pybullet** — [mp4](src/output/report/hd_room17_pybullet_ref.mp4)
 
-![pred mixed_big](src/output/report/pred_mixed_big.png)
+![A. 纯 pybullet](src/output/report/hd_room17_pybullet_ref.gif)
 
-**hyperdrone 大混合权重 → 自己的数据（柱子与房间交替） — 同一帧下六个候选指令在 +32 步的想象，以及碰撞头给出的 P(warn)/P(crit)**
+**B. 纯 hyperdrone 室内** — [mp4](src/output/report/hd_room17_rooms.mp4)
 
-![actions mixed_big](src/output/report/actions_mixed_big.png)
+![B. 纯 hyperdrone 室内](src/output/report/hd_room17_rooms.gif)
 
+**C. 合并** — [mp4](src/output/report/hd_room17_pb_plus_rooms.mp4)
 
-**hyperdrone pb 画风权重 → 自己的数据 — 持有指令下的预测 vs 真实未来**
+![C. 合并](src/output/report/hd_room17_pb_plus_rooms.gif)
 
-![pred mixed_big_pbstyle](src/output/report/pred_mixed_big_pbstyle.png)
 
-**hyperdrone pb 画风权重 → 自己的数据 — 同一帧下六个候选指令在 +32 步的想象，以及碰撞头给出的 P(warn)/P(crit)**
+## 6. 结论
 
-![actions mixed_big_pbstyle](src/output/report/actions_mixed_big_pbstyle.png)
-
-
-**pybullet + hyperdrone 合并权重 → 合并数据 — 持有指令下的预测 vs 真实未来**
-
-![pred pb_plus_big](src/output/report/pred_pb_plus_big.png)
-
-**pybullet + hyperdrone 合并权重 → 合并数据 — 同一帧下六个候选指令在 +32 步的想象，以及碰撞头给出的 P(warn)/P(crit)**
-
-![actions pb_plus_big](src/output/report/actions_pb_plus_big.png)
-
-
-**跨域：pybullet 自带权重看 hyperdrone 画面 — 持有指令下的预测 vs 真实未来**
-
-![pred shipped_on_hyperdrone](src/output/report/pred_shipped_on_hyperdrone.png)
-
-**跨域：pybullet 自带权重看 hyperdrone 画面 — 同一帧下六个候选指令在 +32 步的想象，以及碰撞头给出的 P(warn)/P(crit)**
-
-![actions shipped_on_hyperdrone](src/output/report/actions_shipped_on_hyperdrone.png)
-
-
-**跨域：hyperdrone pb 画风权重看 pybullet 画面 — 持有指令下的预测 vs 真实未来**
-
-![pred pbstyle_on_pybullet](src/output/report/pred_pbstyle_on_pybullet.png)
-
-**跨域：hyperdrone pb 画风权重看 pybullet 画面 — 同一帧下六个候选指令在 +32 步的想象，以及碰撞头给出的 P(warn)/P(crit)**
-
-![actions pbstyle_on_pybullet](src/output/report/actions_pbstyle_on_pybullet.png)
-
-
-
-## 4. 闭环测试（次要：两个仿真器各自的柱子 course、随机外观、室内生存）
-
-这一节回答的是"同一个策略在某个仿真器里能不能飞过去"，它既依赖世界模型，也依赖手写 MPC 的触发阈值和回中先验，而且各仿真器的画风差异主导了结果；对真机更重要的是第 3 节。
-
-测试环境：pybullet 柱子环境（原课程的 `eval_world_model_policy.py` 300 条杂乱 course（210 条 in-path + 90 条清场）、`speed_sweep.py` 每档速度 60 条单柱子 course、`forest_demo.py` 20 片 6 行密林），以及 `src/hd_closed_loop.py` 在 hyperdrone 里镜像的同一套记分板（同 seed 同 course、同策略对象、同 12 Hz 决策、360 步、3 m 终点线、0.22 m 碰撞判定）：pybullet 画风、hyperdrone 画风，以及 hyperdrone 画风加随机外观（随机柱子粗细/高度/颜色、灯光、墙色，训练时没见过的组合）。撞击率后的 ± 是 95% Wilson 置信区间（百分点）。reactive 基线和 wm 策略共用同一 checkpoint 的编码器，所以两者都随 checkpoint 变。
-
-### 4.0 一图看结果
-
-每个训练结果在各测试环境里的成功率（210 条 in-path course 上没有穿越的比例，wm 策略，带 95% 置信区间）和 90 条清场 course 的误触发率；详细数字在下面的表里。
-
-![success rates](src/output/report/results_success.png)
-
-单柱子速度扫描（每档速度 60 条 course）：每个训练结果一格，三条线是三个测试环境，纵轴是 wm 策略的撞击率。
-
-![crash rate vs speed](src/output/report/results_speed.png)
-
-### 4.1 pybullet 环境
-
-| checkpoint | cluttered courses: crash reactive→wm (±95% CI) | min clearance | trigger lead | false pos. (clear) | goal time | single-pillar crash wm (reactive) @0.8 / 1.2 / 1.6 m/s | forest 10×6 rows: wm crashes/forest (reactive), crash-free |
-|---|---|---|---|---|---|---|---|
-| `pybullet_shipped` | 0% → 10% (±4) | 0.41 → 0.41 m | +337 ms (n=210) | 0% → 0% | +3% (n=189) | 7% (0%) / 0% (5%) / 10% (63%) | 3.65 (2.20), 0% (0%) |
-| `pybullet_ref` | 0% → 11% (±4) | 0.41 → 0.38 m | +335 ms (n=210) | 0% → 0% | +2% (n=186) | 7% (0%) / 0% (0%) / 2% (63%) | 2.70 (2.35), 0% (0%) |
-| `mixed_big` | 100% → 94% (±3) | 0.10 → 0.11 m | -1292 ms (n=4) | 91% → 100% | – | 88% (100%) / 90% (100%) / 88% (100%) | 3.40 (2.80), 0% (0%) |
-| `mixed_big_pbstyle` | 77% → 46% (±7) | 0.20 → 0.25 m | +705 ms (n=162) | 58% → 88% | +0% (n=24) | 35% (88%) / 60% (93%) / 18% (100%) | 3.60 (2.15), 0% (10%) |
-| `pb_plus_big` | 1% → 30% (±6) | 0.41 → 0.35 m | +429 ms (n=210) | 2% → 0% | +6% (n=145) | 28% (0%) / 10% (5%) / 20% (68%) | 4.15 (1.60), 0% (20%) |
-| `pb_plus_big_pbstyle` | 1% → 22% (±6) | 0.42 → 0.41 m | +412 ms (n=210) | 100% → 100% | +2% (n=161) | 22% (0%) / 7% (0%) / 20% (63%) | 3.50 (2.05), 0% (10%) |
-
-### 4.2 hyperdrone 环境，pybullet 画风
-
-| checkpoint | cluttered courses: crash reactive→wm (±95% CI) | min clearance | trigger lead | false pos. (clear) | goal time | single-pillar crash wm (reactive) @0.8 / 1.2 / 1.6 m/s |
-|---|---|---|---|---|---|---|
-| `pybullet_shipped@hdpb` | 0% → 7% (±4) | 0.43 → 0.51 m | +421 ms (n=210) | 0% → 0% | +7% (n=194) | 10% (0%) / 17% (2%) / 13% (20%) |
-| `pybullet_ref@hdpb` | 0% → 11% (±4) | 0.43 → 0.50 m | +451 ms (n=210) | 1% → 0% | +7% (n=187) | 2% (0%) / 8% (2%) / 17% (17%) |
-| `mixed_big@hdpb` | 100% → 92% (±4) | 0.12 → 0.14 m | +130 ms (n=155) | 0% → 99% | – | 80% (97%) / 73% (95%) / 67% (88%) |
-| `mixed_big_pbstyle@hdpb` | 0% → 2% (±2) | 0.43 → 0.55 m | +335 ms (n=210) | 0% → 0% | +4% (n=205) | 0% (0%) / 15% (0%) / 20% (28%) |
-| `pb_plus_big@hdpb` | 23% → 41% (±7) | 0.32 → 0.27 m | +529 ms (n=198) | 97% → 100% | +13% (n=103) | 42% (32%) / 43% (35%) / 38% (58%) |
-| `pb_plus_big_pbstyle@hdpb` | 0% → 4% (±3) | 0.45 → 0.50 m | +335 ms (n=210) | 1% → 0% | -2% (n=201) | 0% (0%) / 22% (2%) / 12% (17%)
-
-### 4.3 hyperdrone 环境，hyperdrone 画风
-
-| checkpoint | cluttered courses: crash reactive→wm (±95% CI) | min clearance | trigger lead | false pos. (clear) | goal time | single-pillar crash wm (reactive) @0.8 / 1.2 / 1.6 m/s |
-|---|---|---|---|---|---|---|
-| `pybullet_shipped@hdhd` | 42% → 5% (±3) | 0.23 → 0.51 m | +742 ms (n=195) | 0% → 0% | +7% (n=114) | 0% (53%) / 13% (92%) / 0% (88%) |
-| `pybullet_ref@hdhd` | 100% → 30% (±6) | 0.11 → 0.27 m | +872 ms (n=100) | 0% → 0% | – | 30% (100%) / 22% (100%) / 18% (90%) |
-| `mixed_big@hdhd` | 0% → 8% (±4) | 0.43 → 0.43 m | +348 ms (n=210) | 0% → 0% | +9% (n=194) | 3% (0%) / 33% (0%) / 40% (27%) |
-| `mixed_big_pbstyle@hdhd` | 100% → 100% (±1) | 0.10 → 0.10 m | +33 ms (n=5) | 0% → 2% | – | 100% (100%) / 100% (100%) / 95% (90%) |
-| `pb_plus_big@hdhd` | 1% → 0% (±1) | 0.41 → 0.47 m | +348 ms (n=207) | 0% → 0% | +8% (n=206) | 2% (3%) / 8% (3%) / 13% (35%) |
-| `pb_plus_big_pbstyle@hdhd` | 100% → 59% (±7) | 0.10 → 0.20 m | +361 ms (n=33) | 0% → 0% | +0% (n=1) | 60% (100%) / 73% (100%) / 77% (90%)
-
-### 4.3b hyperdrone 环境，hyperdrone 画风，随机外观
-
-柱子场景的几何不变，外观按数据生成器的随机化抽样（柱子半径 0.14–0.22 m、高度 1.0–1.8 m、颜色 ±0.3，随机太阳方向和颜色、墙色、地砖灰度）。没有任何训练集用过这些组合（`*_rand` 数据集没有参与训练）。
-
-| checkpoint | cluttered courses: crash reactive→wm (±95% CI) | min clearance | trigger lead | false pos. (clear) | goal time | single-pillar crash wm (reactive) @0.8 / 1.2 / 1.6 m/s |
-|---|---|---|---|---|---|---|
-| `pybullet_shipped@hdrand` | 49% → 19% (±5) | 0.26 → 0.41 m | +448 ms (n=127) | 0% → 1% | +6% (n=83) | 28% (58%) / 15% (68%) / 5% (67%) |
-| `pybullet_ref@hdrand` | 57% → 20% (±5) | 0.24 → 0.39 m | +443 ms (n=108) | 0% → 2% | +4% (n=72) | 30% (70%) / 20% (75%) / 23% (72%) |
-| `mixed_big@hdrand` | 82% → 80% (±5) | 0.16 → 0.16 m | +303 ms (n=50) | 13% → 20% | +12% (n=11) | 82% (87%) / 77% (90%) / 72% (83%) |
-| `mixed_big_pbstyle@hdrand` | 81% → 65% (±6) | 0.16 → 0.20 m | +354 ms (n=60) | 9% → 22% | -4% (n=13) | 75% (80%) / 77% (83%) / 73% (83%) |
-| `pb_plus_big@hdrand` | 55% → 43% (±7) | 0.24 → 0.27 m | +554 ms (n=150) | 43% → 57% | -3% (n=62) | 58% (55%) / 42% (62%) / 53% (67%) |
-| `pb_plus_big_pbstyle@hdrand` | 76% → 76% (±6) | 0.18 → 0.18 m | +179 ms (n=65) | 13% → 8% | +1% (n=19) | 78% (73%) / 73% (73%) / 63% (73%)
-
-### 4.4 hyperdrone 室内环境：杂乱房间生存测试
-
-柱子式的 course 在 ProcTHOR 房子里几乎不存在（"独立在空间中、两侧都能绕、后面还有 3 m 直路"的障碍在四栋房子各 6000 次采样里只找到 0–7 个：家具都靠墙，房间小），所以室内测试改用**生存测试**：在训练从未用过的 8 栋房子（目录 16–23）里随机取 300 个起点（净空 ≥ 0.9 m，前方 ≥ 2 m 空，随机航向），策略像在 course 上一样"无威胁就前进、有威胁就绕"，直到第一次接触障碍（距离场表面净空 + 0.18 m < 0.22 m，与柱子同一判定）或 7.5 s 到时。reactive 基线的特权绕行方向用最近障碍格的方位。两种策略用完全相同的起点。
-
-![rooms](src/output/report/results_rooms.png)
-
-| checkpoint | 存活率 reactive→wm | 首次接触时间（接触的 run） | 平均飞行时间 | 接触前平均距离 | 平均净空 | 至少绕行一次 |
-|---|---|---|---|---|---|---|
-| `pybullet_shipped` | 12% → 11% | 4.3 s → 4.5 s | 4.6 s → 4.8 s | 3.52 m → 3.47 m | 1.05 m → 1.04 m | 39% → 86% |
-| `pybullet_ref` | 12% → 17% | 4.3 s → 4.7 s | 4.7 s → 5.2 s | 3.56 m → 3.73 m | 1.05 m → 1.06 m | 43% → 84% |
-| `mixed_big` | 13% → 12% | 4.6 s → 4.6 s | 5.0 s → 5.0 s | 3.74 m → 3.65 m | 1.02 m → 1.02 m | 59% → 76% |
-| `mixed_big_pbstyle` | 12% → 12% | 4.5 s → 4.7 s | 4.9 s → 5.0 s | 3.68 m → 3.65 m | 1.02 m → 1.03 m | 59% → 77% |
-| `pb_plus_big` | 15% → 15% | 4.6 s → 4.7 s | 5.0 s → 5.1 s | 3.77 m → 3.70 m | 1.02 m → 1.02 m | 62% → 83% |
-| `pb_plus_big_pbstyle` | 12% → 10% | 4.6 s → 4.8 s | 5.0 s → 5.1 s | 3.74 m → 3.70 m | 1.02 m → 1.02 m | 60% → 86% |
-
-### 4.5 一张表看跨域（210 条 in-path course 上 wm 策略的撞击率；加粗 = 该行最低且 ≤ 10%）
-
-| 训练数据 \ 测试环境 | pybullet | hyperdrone（pb 画风） | hyperdrone（hd 画风） | hyperdrone（hd 画风，随机外观） |
-|---|---|---|---|---|
-| pybullet 64（仓库自带权重） | 10% | 7% | **5%** | 19% |
-| pybullet 64（同脚本重训） | 11% | 11% | 30% | 20% |
-| hyperdrone 256，hd 画风 | 94% | 92% | **8%** | 80% |
-| hyperdrone 256，pb 画风 | 46% | **2%** | 100% | 65% |
-| pybullet 64 + hd 画风 256 | 30% | 41% | **0%** | 43% |
-| pybullet 64 + pb 画风 256 | 22% | **4%** | 59% | 76% |
-
-## 5. 过程视频（seed 1001 的 in-path course；左俯视轨迹，右策略看到的 64×64 画面）
-
-视频用的是最初的 100 条 course 评估中的一条，和放大后的评估共用同一批 seed。
-
-**pybullet 自带权重，hyperdrone 场景 hd 画风（跨域，成功）** — [mp4](src/output/report/hd_shipped_hdlook.mp4)
-
-![pybullet 自带权重，hyperdrone 场景 hd 画风（跨域，成功）](src/output/report/hd_shipped_hdlook.gif)
-
-**pybullet 重训权重，hyperdrone 场景 hd 画风（跨域，失败多）** — [mp4](src/output/report/hd_ref_hdlook.mp4)
-
-![pybullet 重训权重，hyperdrone 场景 hd 画风（跨域，失败多）](src/output/report/hd_ref_hdlook.gif)
-
-**hyperdrone 训练权重，hyperdrone 场景 hd 画风（同域）** — [mp4](src/output/report/hd_mixed_big_hdlook.mp4)
-
-![hyperdrone 训练权重，hyperdrone 场景 hd 画风（同域）](src/output/report/hd_mixed_big_hdlook.gif)
-
-**同上，reactive 基线** — [mp4](src/output/report/hd_mixed_big_hdlook_reactive.mp4)
-
-![同上，reactive 基线](src/output/report/hd_mixed_big_hdlook_reactive.gif)
-
-**pybullet + hyperdrone 合并训练，hyperdrone 场景 hd 画风** — [mp4](src/output/report/hd_pb_plus_big_hdlook.mp4)
-
-![pybullet + hyperdrone 合并训练，hyperdrone 场景 hd 画风](src/output/report/hd_pb_plus_big_hdlook.gif)
-
-**pybullet 自带权重，hyperdrone 场景 pb 画风** — [mp4](src/output/report/hd_shipped_pblook.mp4)
-
-![pybullet 自带权重，hyperdrone 场景 pb 画风](src/output/report/hd_shipped_pblook.gif)
-
-**hyperdrone pb 画风权重，hyperdrone 场景 pb 画风（同域）** — [mp4](src/output/report/hd_mixed_big_pbstyle_pblook.mp4)
-
-![hyperdrone pb 画风权重，hyperdrone 场景 pb 画风（同域）](src/output/report/hd_mixed_big_pbstyle_pblook.gif)
-
-**hyperdrone hd 画风权重，hyperdrone 场景 pb 画风（画风不符，失败）** — [mp4](src/output/report/hd_mixed_big_pblook.mp4)
-
-![hyperdrone hd 画风权重，hyperdrone 场景 pb 画风（画风不符，失败）](src/output/report/hd_mixed_big_pblook.gif)
-
-
-室内生存测试（17 号房子，seed 1017，同一起点；左侧是占据栅格地图：黑 = 障碍，灰 = 室外，白→灰 = 净空由大到小）：
-
-**hyperdrone 训练权重，wm 策略** — [mp4](src/output/report/hd_room17_mixed_big.mp4)
-
-![hyperdrone 训练权重，wm 策略](src/output/report/hd_room17_mixed_big.gif)
-
-**hyperdrone 训练权重，reactive 基线** — [mp4](src/output/report/hd_room17_mixed_big_reactive.mp4)
-
-![hyperdrone 训练权重，reactive 基线](src/output/report/hd_room17_mixed_big_reactive.gif)
-
-**pybullet 自带权重，wm 策略** — [mp4](src/output/report/hd_room17_shipped.mp4)
-
-![pybullet 自带权重，wm 策略](src/output/report/hd_room17_shipped.gif)
-
-**pybullet + hyperdrone 合并权重，wm 策略** — [mp4](src/output/report/hd_room17_pb_plus_big.mp4)
-
-![pybullet + hyperdrone 合并权重，wm 策略](src/output/report/hd_room17_pb_plus_big.gif)
-
-
-pybullet 侧的柱子森林（4 行，`forest_demo.py --rows 4`）：
-
-**pybullet 自带权重** — [top-down mp4](src/output/report/forest_pb_shipped_wm-mpc.mp4) · [onboard mp4](src/output/report/forest_pb_shipped_wm-mpc_onboard.mp4)
-
-![pybullet 自带权重](src/output/report/forest_pb_shipped_wm-mpc.gif)
-
-**pybullet 重训权重** — [top-down mp4](src/output/report/forest_pb_ref_wm-mpc.mp4) · [onboard mp4](src/output/report/forest_pb_ref_wm-mpc_onboard.mp4)
-
-![pybullet 重训权重](src/output/report/forest_pb_ref_wm-mpc.gif)
-
-**pybullet + pb 画风合并训练** — [top-down mp4](src/output/report/forest_pb_plus_big_pbstyle_wm-mpc.mp4) · [onboard mp4](src/output/report/forest_pb_plus_big_pbstyle_wm-mpc_onboard.mp4)
-
-![pybullet + pb 画风合并训练](src/output/report/forest_pb_plus_big_pbstyle_wm-mpc.gif)
-
-**只用 hyperdrone pb 画风数据（跨域）** — [top-down mp4](src/output/report/forest_mixed_big_pbstyle_wm-mpc.mp4) · [onboard mp4](src/output/report/forest_mixed_big_pbstyle_wm-mpc_onboard.mp4)
-
-![只用 hyperdrone pb 画风数据（跨域）](src/output/report/forest_mixed_big_pbstyle_wm-mpc.gif)
-
-
-## 6. 结论（以泛化为中心）
-
-1. **碰撞预判的跨域泛化：pybullet 数据训出的模型最好，hyperdrone 固定配色数据训出的模型最差。** 在没有任何模型见过的随机外观柱子上，pybullet 模型的 AUC@32 仍有 0.85–0.86、安全绕行排序 0.89–0.97；hyperdrone 训练的模型 AUC 掉到 0.51–0.53（随机水平），换一种画风也只有 0.44–0.72。hyperdrone 数据集里柱子、墙、地面的配色是固定的，模型学到的是"这种橙色竖条才危险"；pybullet 自带阴影斑块和杂乱纹理的渲染在训练时起了增强作用。闭环里随机外观撞击率 19–20% 对 65–80% 和这组离线数字完全对应。
-2. **合并数据把覆盖面扩到最广，但没有解决外观泛化。** pybullet + hyperdrone（hd 画风）的模型在所有柱子域 AUC ≥ 0.75、在没见过的房子里 0.68，是六个模型里"到处都还能用"的那个；但随机外观下仍只有 0.75，比 pybullet 单独训练的 0.86 还低——多加一个画风不等于学会了对画风不敏感。
-3. **未来帧预测在柱子场景成立，在房间里不成立。** 柱子域上解码出的预测帧比复制当前帧好 30–60%（增益 +0.3～+0.6），柱子的位置、粗细随指令移动都看得出来；训练用过的房间只有 +0.33～+0.41，没见过的房子 ≤ 0（和复制当前帧一样甚至更差），碰撞预判也只有 0.65–0.70。64 维潜变量 + 潜空间 MSE 目标 + 128 条房间 rollout（16 栋房子）学不到房间的未来画面，只学到了"前方有大块东西就是危险"。
-4. **碰撞预判 ≠ 像素预测，避障该看前者。** pybullet 模型放到 hd 画风柱子上，潜变量预测增益是 −0.06（预测器输出并不接近未来潜变量），碰撞 AUC 却有 0.93：碰撞头读的是预测器保留下来的"危险"方向，不需要整张画面都对。解码帧是诊断工具，部署指标应该是碰撞头 AUC 和绕行排序在**未见域**上的数值。
-5. **对真机 Tello 的含义。** 真机 = 没见过的外观 + 房间，正是现在最弱的两个方向。证据支持的做法：(a) 生成训练数据时一定开 `--randomize`，并混入 pybullet 这类"脏"渲染或真实照片做外观增强（本报告里的 `*_rand` 数据集没有参与训练，应补一组）；(b) 房间需要远多于 128 条 rollout 和更多房子，并且潜变量目标要换成能保留场景内容的（更高维、对比式或带像素/深度辅助监督，`--save-depth` 已可用）；(c) 相机按 Tello 实测标定用 40° 稳像视角重训，部署前用真机 shadow 推理在真实房间里复测这两张热力图的指标。
-6. 仓库自带的 `world_model.pth` 比同脚本重训的版本更鲁棒（hd 画风柱子上 danger-now AUC 0.73 对 0.55，闭环 5% 对 30% 撞击率），上游训练设置和脚本默认值不同，拿它当基线要留意。
-7. 闭环柱子测试（第 4 节）的次要结论：画风决定迁移、动力学差异次要；pybullet → hyperdrone 几乎无损、反向只有部分迁移；合并数据在 pybullet 里变差（11% → 22–30%）是 MPC 阈值按 pybullet 模型标定的结果；室内生存率全部 10–17%，这个 MPC 没有房间导航能力，与训练数据无关。
+1. **pybullet 柱子避障：纯 pybullet 训练的模型最好，合并室内数据反而变差，纯室内模型完全不迁移。** 300 条 course 上 wm 策略的撞击率 A 11%、C 20%、B 82%。B 没见过柱子也没见过 pybullet 的画面，碰撞头在那里接近随机（离线 AUC 0.44）；C 比 A 差 9 个百分点（置信区间 ±4，差异真实），这是把 256 条域外室内 rollout 并进 64 条 pybullet 数据后，pybullet 分布被稀释、碰撞头的概率标定改变，而 MPC 的触发阈值仍按 pybullet 模型调定的结果。
+2. **hyperdrone 室内避障：三个模型的存活率并列（16–17%，置信区间 ±4），室内数据没有带来室内优势。** 但离线指标显示 B、C 确实比 A 更能预见室内危险：在没见过的 16–23 号房子里碰撞预判 AUC 0.69 对 A 的 0.46（随机水平），danger-now AUC 0.69–0.74 对 0.41。预见到了却活不下来，说明室内任务现在卡在**策略**而不是世界模型上：这个 MPC 只有"0.5 s 的左/右脉冲 + 回中先验"，房间里需要的是沿墙、过门、绕家具的持续导航，预判到危险也没有合适的动作可选；4.2 的上限检验证实了这一点：一个直接读取房间几何、但限制在同样动作菜单里的特权策略也只有 32% 存活，允许被堵住时悬停后才到 89%。视觉模型的 16–17% 已经是这个动作空间允许的一半；A 靠"前方出现大块近物就触发"这种通用反应拿到了同样的存活率。
+3. **只用室内数据，世界模型几乎学不到预测。** B 的潜变量预测误差 0.549 对 no-op 0.601（提升不到 10%），held-out AUC@32 只有 0.57，解码出的未来帧在未见房子里不比复制当前帧好；加上 64 条 pybullet 柱子数据后（C）AUC@32 升到 0.76、veer-ranking 0.87。柱子数据给潜空间提供了"障碍 = 前方逐渐变大的物体"这个简单骨架，房间数据单独撑不起这个 64 维潜变量 + 潜空间 MSE 的目标。4.4 的解码图直观地显示了这一点：同一个正前方的柱子，A 在 +32 步把它画得明显变大，B 在 +8 和 +32 画出的柱子几乎一样大（等于"未来 = 现在"），C 介于两者之间；在没见过的房间里三个模型都只能画出墙和地面的大色块，没有任何家具。
+4. **对没见过的外观的鲁棒性由 pybullet 数据提供，不是室内数据。** 随机外观柱子上碰撞预判 AUC：A 0.85、C 0.81、B 0.57。
+5. **对真机的含义。** (a) 现在的室内数据训不出能在室内飞的策略，先要解决的是 MPC 的动作空间和目标层（允许悬停、持续转向、沿墙、目标点），然后才是数据量（256 条、16 栋房子远远不够）和潜变量目标（更高维、对比式或带像素/深度辅助监督）。(b) 就现有模型而言，真机上更值得试的是 A 或 C（含 pybullet 数据），并在生成 hyperdrone 数据时开外观随机化。(c) 评估以未见域的碰撞预判 AUC 和绕行排序为主，闭环生存率要和策略改动一起看；部署前用真机 shadow 推理复测。
+6. 说明：A 用的是同一脚本重训的 `world_model_pybullet_ref.pth`，不是仓库自带的 `world_model.pth`，以保证三者训练条件一致；自带权重更鲁棒（见归档报告）。
 
 ## 7. 复现
 
 ```bash
 # 数据（conda env dreamer）
-python src/gen_wm_dataset_hyperdrone.py --scene mixed --rollouts 128 --rooms 128 --houses 16 --len 120 --fov-deg 60 --camera body --out src/output/wm_dataset_mixed_big_60body.npz
-python src/gen_wm_dataset_hyperdrone.py --scene mixed --rollouts 128 --rooms 128 --houses 16 --len 120 --fov-deg 60 --camera body --arena-style pybullet --out src/output/wm_dataset_mixed_big_60body_pbstyle.npz
-python src/merge_datasets.py src/output/wm_dataset.npz src/output/wm_dataset_mixed_big_60body.npz --out src/output/wm_dataset_pb_plus_big.npz
+python src/gen_wm_dataset_hyperdrone.py --scene rooms --rollouts 256 --rooms 256 --houses 16 --house-first 0 --len 120 --fov-deg 60 --camera body --out src/output/wm_dataset_rooms_train60.npz
+python src/merge_datasets.py src/output/wm_dataset.npz src/output/wm_dataset_rooms_train60.npz --out src/output/wm_dataset_pb_plus_rooms.npz
 # 训练（GPU）
-python src/train_world_model.py --epochs 80 --data src/output/wm_dataset_mixed_big_60body.npz --out src/output/world_model_mixed_big.pth
-# pybullet 闭环（conda env drone_python）
-python src/eval_world_model_policy.py --seeds 100 --model src/output/world_model_mixed_big.pth
-python src/speed_sweep.py --seeds 30 --no-learned --model src/output/world_model_mixed_big.pth --plot src/output/speed_sweep_mixed_big.png
-python src/forest_demo.py --seeds 10 --rows 6 --video none --no-learned --tag mixed_big --model src/output/world_model_mixed_big.pth
-# hyperdrone 闭环（conda env dreamer）
-python src/hd_closed_loop.py --model src/output/world_model_mixed_big.pth --arena-style hyperdrone
-python src/hd_video.py --model src/output/world_model_mixed_big.pth --arena-style hyperdrone --seed 1001 --tag mixed_big_hdlook
-# 离线泛化网格（第 3 节）
-python src/eval_offline.py
-# 预测解码
-python src/decode_latents.py --model src/output/world_model_mixed_big.pth --data src/output/wm_dataset_mixed_big_60body.npz --tag mixed_big
+python src/train_world_model.py --epochs 80 --data src/output/wm_dataset_rooms_train60.npz --out src/output/world_model_rooms.pth
+# pybullet 任务（conda env drone_python）
+python src/eval_world_model_policy.py --seeds 300 --model src/output/world_model_rooms.pth
+python src/speed_sweep.py --seeds 60 --no-learned --model src/output/world_model_rooms.pth --plot src/output/speed_sweep_rooms.png
+# hyperdrone 室内任务及其 oracle 上限（conda env dreamer）
+python src/hd_closed_loop.py --scene rooms --houses 8 --house-first 16 --seeds 300 --sweep-seeds 0 --model src/output/world_model_rooms.pth
+python src/hd_oracle.py --houses 8 --house-first 16 --seeds 300 | tee src/output/evals/oracle_rooms.log
+# 离线预测指标、视频、本报告
+python src/eval_offline.py --models pybullet_ref rooms pb_plus_rooms --domains pybullet rand_pillars rooms_train rooms_unseen --out three_way
+python src/hd_video.py --scene rooms --house 17 --seed 1017 --model src/output/world_model_rooms.pth --tag room17_rooms
+python src/decode_compare.py --lang both
+python src/draw_pipeline.py --lang both
+python src/make_report_three.py --lang zh
 ```

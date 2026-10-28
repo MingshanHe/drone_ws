@@ -1,0 +1,12 @@
+[INFO] device cuda; windows: pybullet r38 t40, pybullet r46 t4, rand_pillars r18 t0, rand_pillars r32 t6, rooms_unseen r8 t18, rooms_unseen r38 t18
+  pybullet_ref   pybullet      decoded-frame gain @8 +0.44  @32 +0.64  (windows 362, seen)
+  pybullet_ref   rand_pillars  decoded-frame gain @8 +0.07  @32 +0.33  (windows 353)
+  pybullet_ref   rooms_unseen  decoded-frame gain @8 -0.35  @32 -0.55  (windows 358)
+  rooms          pybullet      decoded-frame gain @8 +0.21  @32 +0.29  (windows 362)
+  rooms          rand_pillars  decoded-frame gain @8 +0.13  @32 +0.27  (windows 353)
+  rooms          rooms_unseen  decoded-frame gain @8 -0.23  @32 -0.06  (windows 358)
+  pb_plus_rooms  pybullet      decoded-frame gain @8 +0.26  @32 +0.57  (windows 362, seen)
+  pb_plus_rooms  rand_pillars  decoded-frame gain @8 +0.06  @32 +0.36  (windows 353)
+  pb_plus_rooms  rooms_unseen  decoded-frame gain @8 -0.10  @32 +0.09  (windows 358)
+DECODE-THREE OK -> /home/robot/sakana-ai/Drone Dataset/drone_ws/src/output/report/decode_three.png
+DECODE-THREE OK -> /home/robot/sakana-ai/Drone Dataset/drone_ws/src/output/report/decode_three_en.png
