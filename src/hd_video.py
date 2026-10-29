@@ -27,7 +27,7 @@ from gen_wm_dataset import ACTION_NAMES, ACTION_VECS, COLLISION_R, FORWARD, STAR
 from gen_wm_dataset_hyperdrone import ARENA_STYLES, CHUNK, DEFAULT_FOV, IMG_RES, Flight, _jit_fast, _rot, build_scene, room_offsets  # noqa: E402
 from hd_closed_loop import Episode, RoomEpisode  # noqa: E402
 from train_world_model import MODEL, load_model  # noqa: E402
-from wm_closed_loop import DECIDE_EVERY, GOAL_X, TMAX, ReactivePolicy, WMPolicy  # noqa: E402
+from wm_closed_loop import DECIDE_EVERY, GOAL_X, TMAX, ReactivePolicy, WMPolicy, reactive_policy, wm_policy  # noqa: E402
 
 OUT_DIR = os.path.join(HERE, "output", "report")
 TOP = 320  # top-down render size (square)
@@ -71,7 +71,7 @@ def main() -> None:
         return main_rooms(args)
 
     enc, pred, cheads, nhead, meta = load_model(args.model, device="cpu")
-    policy = WMPolicy(enc, pred, cheads, meta, speed=args.speed) if args.policy == "wm" else ReactivePolicy(enc, nhead)
+    policy = wm_policy(enc, pred, cheads, meta, speed=args.speed) if args.policy == "wm" else reactive_policy(enc, nhead, meta)
     ep = Episode(args.seed, policy, not args.clear, args.speed, False)
     flight = Flight(CHUNK, "crazyflie", 0, False, "body")
     cams = (CameraSpec("front", (RGB("rgba8"),)),)
@@ -173,7 +173,7 @@ def main_rooms(args) -> None:
     from wm_rooms import GRID, DistanceField, house_references, load_house, probe_renderer
 
     enc, pred, cheads, nhead, meta = load_model(args.model, device="cpu")
-    policy = WMPolicy(enc, pred, cheads, meta, speed=args.speed) if args.policy == "wm" else ReactivePolicy(enc, nhead)
+    policy = wm_policy(enc, pred, cheads, meta, speed=args.speed) if args.policy == "wm" else reactive_policy(enc, nhead, meta)
     house_id, ref = house_references(1, first=args.house)[0]
     house = load_house(ref, fidelity="medium")
     rig = _jit_fast(probe_renderer)

@@ -1,0 +1,6 @@
+#rl_tools::hyperlux::datasets: Loaded model with 419 mesh(es)
+#rl_tools::hyperlux: WebGPU adapter: llvmpipe (LLVM 20.1.2, 256 bits) (backend 6)
+#rl_tools::hyperlux: backend=webgpu
+#rl_tools::hyperlux: WebGPU adapter: llvmpipe (LLVM 20.1.2, 256 bits) (backend 6)
+#rl_tools::hyperlux: backend=webgpu
+HD-VIDEO OK: room17_dreamer: house ProcTHOR-Train-17 survived=4.6 s contact=yes min_clear=0.21 m trigger=100 -> /home/robot/sakana-ai/Drone Dataset/drone_ws/src/output/report/hd_room17_dreamer.mp4 /home/robot/sakana-ai/Drone Dataset/drone_ws/src/output/report/hd_room17_dreamer.gif

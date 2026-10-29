@@ -495,8 +495,19 @@ def train(
 def load_model(path: str = MODEL, device: str = "cpu"):
     """Rebuild the trained nets from a checkpoint. Returns
     (encoder, predictor, collision_heads, now_head, meta), all in eval mode."""
-    ckpt = torch.load(path, map_location=device, weights_only=True)
+    try:
+        ckpt = torch.load(path, map_location=device, weights_only=True)
+    except Exception:  # a Dreamer checkpoint carries its training history in meta
+        ckpt = torch.load(path, map_location=device, weights_only=False)
     meta = ckpt["meta"]
+    if meta.get("family") == "dreamer":  # PLAN_dreamerv3.md: the RSSM world model is one module;
+        # the eval scripts get the same 5-tuple and build policies via wm_closed_loop.wm_policy()
+        from train_dreamer import Dreamer
+
+        model = Dreamer(meta["cfg"]).to(device)
+        model.load_state_dict(ckpt["model"])
+        model.eval()
+        return model, None, None, None, meta
     if meta.get("version") != 2:
         raise SystemExit(f"{path} is not a v2 checkpoint; re-run this script.")
     enc, pred = Encoder().to(device), MultiPredictor().to(device)

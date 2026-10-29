@@ -1,0 +1,14 @@
+[INFO] 4 domains: pybullet pillars (64 rollouts), hyperdrone pillars, random appearance (unseen) (64 rollouts), hyperdrone rooms, houses 0-15 (64 rollouts), hyperdrone rooms, houses 16-23 (unseen) (64 rollouts)
+  dreamer_pybullet     pybullet pillars                              auc@32 1.00  now 0.99  rank 0.92 (n=167)  latent gain +0.78  frame gain +0.91  *seen
+  dreamer_pybullet     hyperdrone pillars, random appearance (unseen) auc@32 0.73  now 0.71  rank 0.47 (n=172)  latent gain +0.11  frame gain -0.74
+  dreamer_pybullet     hyperdrone rooms, houses 0-15                 auc@32 0.64  now 0.62  rank 0.20 (n=88)  latent gain -0.16  frame gain -2.64
+  dreamer_pybullet     hyperdrone rooms, houses 16-23 (unseen)       auc@32 0.75  now 0.70  rank 0.52 (n=33)  latent gain -0.23  frame gain -1.44
+  dreamer_rooms        pybullet pillars                              auc@32 0.59  now 0.63  rank 0.37 (n=167)  latent gain +0.12  frame gain -2.55
+  dreamer_rooms        hyperdrone pillars, random appearance (unseen) auc@32 0.76  now 0.75  rank 0.58 (n=172)  latent gain +0.27  frame gain -0.24
+  dreamer_rooms        hyperdrone rooms, houses 0-15                 auc@32 0.84  now 0.86  rank 0.43 (n=88)  latent gain +0.30  frame gain +0.16  *seen
+  dreamer_rooms        hyperdrone rooms, houses 16-23 (unseen)       auc@32 0.90  now 0.89  rank 0.79 (n=33)  latent gain +0.27  frame gain +0.10
+  dreamer_pb_plus_rooms pybullet pillars                              auc@32 1.00  now 1.00  rank 0.80 (n=167)  latent gain +0.68  frame gain +0.85  *seen
+  dreamer_pb_plus_rooms hyperdrone pillars, random appearance (unseen) auc@32 0.71  now 0.73  rank 0.67 (n=172)  latent gain +0.30  frame gain -0.13
+  dreamer_pb_plus_rooms hyperdrone rooms, houses 0-15                 auc@32 0.85  now 0.86  rank 0.18 (n=88)  latent gain +0.29  frame gain +0.07  *seen
+  dreamer_pb_plus_rooms hyperdrone rooms, houses 16-23 (unseen)       auc@32 0.85  now 0.89  rank 0.67 (n=33)  latent gain +0.31  frame gain +0.25
+GENERALIZATION OK -> /home/robot/sakana-ai/Drone Dataset/drone_ws/src/output/report/dreamer_three.md

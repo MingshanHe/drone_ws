@@ -64,6 +64,13 @@ MODELS = [  # tag, checkpoint, label, domains it was trained on
     ("pb_plus_big_pbstyle", "world_model_pb_plus_big_pbstyle.pth", "pybullet + hyperdrone pb look", {"pybullet", "pb_pillars", "rooms_train"}),
     ("rooms", "world_model_rooms.pth", "hyperdrone rooms 256", {"rooms_train"}),
     ("pb_plus_rooms", "world_model_pb_plus_rooms.pth", "pybullet 64 + hyperdrone rooms 256", {"pybullet", "rooms_train"}),
+    # PLAN_dreamerv3.md: the RSSM world models (train_dreamer.py), scored by open-loop imagination
+    ("dreamer_pybullet", "world_model_dreamer_pybullet.pth", "nano-Dreamer, pybullet 64", {"pybullet"}),
+    ("dreamer_rooms", "world_model_dreamer_rooms.pth", "nano-Dreamer, hyperdrone rooms 256", {"rooms_train"}),
+    ("dreamer_pb_plus_rooms", "world_model_dreamer_pb_plus_rooms.pth", "nano-Dreamer, pybullet 64 + rooms 256", {"pybullet", "rooms_train"}),
+    ("dreamer_rooms6k", "world_model_dreamer_rooms6k.pth", "nano-Dreamer, rooms 256, 6k steps", {"rooms_train"}),
+    ("dreamer_pb_plus_rooms6k", "world_model_dreamer_pb_plus_rooms6k.pth", "nano-Dreamer, pybullet 64 + rooms 256, 6k steps", {"pybullet", "rooms_train"}),
+    ("dreamer_pybullet_mem", "world_model_dreamer_pybullet_mem.pth", "nano-Dreamer, pybullet 64, memory-aware cf", {"pybullet"}),
 ]
 PER_ROLLOUT = ("frames", "actions", "act_id", "seg", "dists", "pos", "pillars", "in_path", "speed", "cf_labels", "cf_visible", "scene_type")
 
@@ -172,6 +179,101 @@ def frame_gain(enc, pred, dec, data, rolls, device):
     return {"frame_gain": 1.0 - (mp / n) / max(mc / n, 1e-9), "pred_mse": mp / n, "copy_mse": mc / n, "recon_mse": mr / n}
 
 
+# ---------------------------------------------------------------- Dreamer family (PLAN_dreamerv3.md)
+@torch.no_grad()
+def dreamer_beliefs(model, data, device, chunk=48):
+    """Posterior belief for every frame of every rollout: each rollout is observed at the four
+    12 Hz phases from its first frame, so the belief at frame t has seen frames t%4, t%4+4, ..., t."""
+    from dreamer.data import STRIDE, SeqData
+
+    sd = SeqData(data, device)
+    rssm = model.rssm
+    h = torch.zeros(sd.R, sd.T * STRIDE, rssm.deter, device=device)
+    z = torch.zeros(sd.R, sd.T * STRIDE, rssm.stoch, rssm.classes, device=device)
+    for i in range(0, sd.R, chunk):
+        ep = sd.episodes(range(i, min(i + chunk, sd.R)))
+        x = ep["frames"]
+        N, T = x.shape[:2]
+        post, _ = rssm.observe(model.enc(x.flatten(0, 1)).view(N, T, -1), ep["a_prev"])
+        rr = ep["r"][:, None].expand(N, T)
+        h[rr, ep["t_abs"]], z[rr, ep["t_abs"]] = post["h"], post["z"]
+    return {"h": h, "z": z}, sd
+
+
+@torch.no_grad()
+def dreamer_within(model, state, acts, chunk=1024):
+    """Hold per-sample commands acts (n, H, 4) in the prior from beliefs `state` (n, ...);
+    returns (within (n, horizons, rings), imagined feats at the last step (n, F))."""
+    ws, fs = [], []
+    for i in range(0, acts.shape[0], chunk):
+        st = {k: v[i : i + chunk] for k, v in state.items()}
+        im = model.rssm.imagine(st, acts[i : i + chunk])
+        fim = model.rssm.feat(im)
+        ws.append(model.within(model.p_col(model.rssm.feat(st)), model.p_col(fim)))
+        fs.append(fim[:, -1])
+    return torch.cat(ws), torch.cat(fs)
+
+
+@torch.no_grad()
+def score_dreamer(model, data, device):
+    from train_dreamer import H_IMAG
+
+    beliefs, sd = dreamer_beliefs(model, data, device)
+    A = data["actions"]
+    feats = model.rssm.feat(beliefs)  # (R, L, F)
+    idx, c_h = _index_samples(data)
+    r, t = idx[:, 0], idx[:, 1]
+    st = {k: v[r, t] for k, v in beliefs.items()}
+    a = torch.tensor(A[r, t] / A_NORM, dtype=torch.float32, device=device)[:, None].expand(-1, H_IMAG, -1)
+    w, f_last = dreamer_within(model, st, a)
+    p = w[:, :, 0].cpu().numpy()
+    aucs = [roc_auc(p[:, j], c_h[:, j, 0]) for j in range(len(HORIZONS))]
+    f_true, f_now = feats[r, t + HORIZONS[-1]], feats[r, t]
+    latent_gain = 1.0 - float(((f_last - f_true) ** 2).mean()) / max(float(((f_now - f_true) ** 2).mean()), 1e-9)
+    now = model.p_col(feats.flatten(0, 1))[:, 0].cpu().numpy()
+    now_auc = roc_auc(now, (data["dists"].reshape(-1) < DANGER_R).astype(np.float32))
+    il, ir = ACTION_NAMES.index("veer_left"), ACTION_NAMES.index("veer_right")
+    cf, vis = data["cf_labels"], data["cf_visible"]
+    sel = (cf[:, :, il, -1, 0] != cf[:, :, ir, -1, 0]) & (vis[:, :, il] == 1) & (vis[:, :, ir] == 1)
+    rr, tt = np.nonzero(sel)
+    cf_rank, n_rank = float("nan"), 0
+    if len(rr):
+        st = {k: v[rr, tt] for k, v in beliefs.items()}
+        sv = torch.tensor(data["speed"][rr], dtype=torch.float32, device=device)[:, None, None]
+        base = torch.tensor(ACTION_VECS / A_NORM, dtype=torch.float32, device=device)
+        pl = dreamer_within(model, st, (base[il] * sv).expand(-1, H_IMAG, -1))[0][:, -1, 0].cpu().numpy()
+        pr = dreamer_within(model, st, (base[ir] * sv).expand(-1, H_IMAG, -1))[0][:, -1, 0].cpu().numpy()
+        left_safe = cf[rr, tt, il, -1, 0] == 0
+        cf_rank, n_rank = float(np.mean(np.where(left_safe, pl < pr, pr < pl))), int(len(rr))
+    return {"auc": aucs, "now_auc": now_auc, "latent_gain": latent_gain, "cf_rank": cf_rank, "n_rank": n_rank, "n_windows": int(len(idx))}, beliefs
+
+
+@torch.no_grad()
+def frame_gain_dreamer(model, beliefs, data, rolls, device):
+    """Same definition as frame_gain, through the model's own decoder: belief at t, hold the flown
+    command for 8 imagined steps (= 32 frames), decode, compare with the true frame t+32."""
+    from train_dreamer import H_IMAG
+
+    F, A = data["frames"], data["actions"]
+    L, k = F.shape[1], HORIZONS[-1]
+    idx = [(r, t) for r in rolls for t in range(0, L - k, 2) if window_valid(data["seg"][r], t, k)]
+    mp = mc = mr = 0.0
+    for i in range(0, len(idx), 256):
+        chunk = idx[i : i + 256]
+        r = np.array([c[0] for c in chunk])
+        t = np.array([c[1] for c in chunk])
+        x = frames_to_tensor(F[r, t], device)
+        xk = frames_to_tensor(F[r, t + k], device)
+        a = torch.tensor(A[r, t] / A_NORM, dtype=torch.float32, device=device)[:, None].expand(-1, H_IMAG, -1)
+        st = {kk: v[r, t] for kk, v in beliefs.items()}
+        _, f_last = dreamer_within(model, st, a)
+        mp += float(((model.dec(f_last).clamp(0, 1) - xk) ** 2).mean(dim=(1, 2, 3)).sum())
+        mc += float(((x - xk) ** 2).mean(dim=(1, 2, 3)).sum())
+        mr += float(((model.dec(model.rssm.feat(st)).clamp(0, 1) - x) ** 2).mean(dim=(1, 2, 3)).sum())
+    n = max(len(idx), 1)
+    return {"frame_gain": 1.0 - (mp / n) / max(mc / n, 1e-9), "pred_mse": mp / n, "copy_mse": mc / n, "recon_mse": mr / n}
+
+
 def cross_figure(tag, label, enc, pred, decoders, domains, device, rng):
     import matplotlib
 
@@ -268,25 +370,32 @@ def main() -> None:
     print(f"[INFO] {len(domains)} domains: " + ", ".join(f"{lbl} ({d['frames'].shape[0]} rollouts)" for _, lbl, d in domains))
     results = {}
     rng = np.random.default_rng(0)
-    for tag, ckpt, label, seen in MODELS:
-        if tag not in args.models:
+    adhoc = [(os.path.splitext(os.path.basename(m))[0], m, os.path.splitext(os.path.basename(m))[0], set()) for m in args.models if m.endswith(".pth")]
+    for tag, ckpt, label, seen in MODELS + adhoc:
+        if tag not in args.models and ckpt not in args.models:
             continue
-        enc, pred, cheads, nhead, meta = load_model(os.path.join(OUT_DIR, ckpt), device=device)
+        enc, pred, cheads, nhead, meta = load_model(ckpt if os.path.isabs(ckpt) else os.path.join(OUT_DIR, ckpt), device=device)
         results[tag] = {}
         cross = []
         for key, dlabel, data in domains:
             R = data["frames"].shape[0]
             split = np.random.default_rng(1).permutation(R)
             fit_rolls, test_rolls = split[: int(0.8 * R)], split[int(0.8 * R) :]
-            m, _ = score(enc, pred, cheads, nhead, data, device)
-            dec = fit_decoder(enc, data["frames"][fit_rolls], device, epochs=args.epochs)
-            m.update(frame_gain(enc, pred, dec, data, test_rolls, device))
+            if pred is None:  # Dreamer: beliefs by observation, futures by imagination, its own decoder
+                m, beliefs = score_dreamer(enc, data, device)
+                m.update(frame_gain_dreamer(enc, beliefs, data, test_rolls, device))
+                dec = None
+            else:
+                m, _ = score(enc, pred, cheads, nhead, data, device)
+                dec = fit_decoder(enc, data["frames"][fit_rolls], device, epochs=args.epochs)
+                m.update(frame_gain(enc, pred, dec, data, test_rolls, device))
             m["seen"] = key in seen
             results[tag][key] = m
             cross.append((key, dlabel, data, dec, test_rolls))
             print(f"  {tag:20s} {dlabel:45s} auc@32 {m['auc'][-1]:.2f}  now {m['now_auc']:.2f}  rank {m['cf_rank']:.2f} (n={m['n_rank']})  "
                   f"latent gain {m['latent_gain']:+.2f}  frame gain {m['frame_gain']:+.2f}{'  *seen' if m['seen'] else ''}")
-        cross_figure(tag, label, enc, pred, None, cross, device, rng)
+        if pred is not None:
+            cross_figure(tag, label, enc, pred, None, cross, device, rng)
     with open(os.path.join(REP, f"{args.out}.json"), "w") as f:
         json.dump(results, f, indent=2)
     if len(results) == len(MODELS):
@@ -294,7 +403,7 @@ def main() -> None:
     # markdown tables
     lines = []
     dl = {d[0]: d[1] for d in DOMAINS}
-    ml = {m[0]: m[2] for m in MODELS}
+    ml = {m[0]: m[2] for m in MODELS + adhoc}
     for title, pick, fmt in (
         ("碰撞预判 AUC@32（0.5 = 随机）", lambda m: m["auc"][-1], "{:.2f}"),
         ("碰撞预判 AUC@8", lambda m: m["auc"][1], "{:.2f}"),

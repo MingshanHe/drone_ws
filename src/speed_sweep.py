@@ -48,6 +48,8 @@ from gen_wm_dataset import make_env  # noqa: E402
 from wm_closed_loop import (  # noqa: E402
     ReactivePolicy,
     WMPolicy,
+    reactive_policy,
+    wm_policy,
     load_or_train,
     run_episode,
 )
@@ -64,8 +66,8 @@ def _policies(enc, pred, cheads, nhead, meta, learned: bool = True):
     trained on top of the pybullet world model's latents, so they only make
     sense with that checkpoint)."""
     mk = {
-        "reactive": lambda s: ReactivePolicy(enc, nhead),
-        "wm": lambda s: WMPolicy(enc, pred, cheads, meta, speed=s),
+        "reactive": lambda s: reactive_policy(enc, nhead, meta),
+        "wm": lambda s: wm_policy(enc, pred, cheads, meta, speed=s),
     }
     if not learned:
         return mk

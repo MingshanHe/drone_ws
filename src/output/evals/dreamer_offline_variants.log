@@ -1,0 +1,10 @@
+[INFO] 4 domains: pybullet pillars (64 rollouts), hyperdrone pillars, random appearance (unseen) (64 rollouts), hyperdrone rooms, houses 0-15 (64 rollouts), hyperdrone rooms, houses 16-23 (unseen) (64 rollouts)
+  dreamer_rooms6k      pybullet pillars                              auc@32 0.64  now 0.65  rank 0.51 (n=167)  latent gain +0.07  frame gain -4.05
+  dreamer_rooms6k      hyperdrone pillars, random appearance (unseen) auc@32 0.83  now 0.84  rank 0.63 (n=172)  latent gain +0.23  frame gain -0.52
+  dreamer_rooms6k      hyperdrone rooms, houses 0-15                 auc@32 0.91  now 0.89  rank 0.38 (n=88)  latent gain +0.25  frame gain +0.20  *seen
+  dreamer_rooms6k      hyperdrone rooms, houses 16-23 (unseen)       auc@32 0.89  now 0.89  rank 0.24 (n=33)  latent gain +0.26  frame gain -0.07
+  dreamer_pb_plus_rooms6k pybullet pillars                              auc@32 0.99  now 1.00  rank 0.73 (n=167)  latent gain +0.58  frame gain +0.74  *seen
+  dreamer_pb_plus_rooms6k hyperdrone pillars, random appearance (unseen) auc@32 0.83  now 0.83  rank 0.74 (n=172)  latent gain +0.26  frame gain -0.01
+  dreamer_pb_plus_rooms6k hyperdrone rooms, houses 0-15                 auc@32 0.83  now 0.85  rank 0.43 (n=88)  latent gain +0.24  frame gain +0.20  *seen
+  dreamer_pb_plus_rooms6k hyperdrone rooms, houses 16-23 (unseen)       auc@32 0.85  now 0.90  rank 0.30 (n=33)  latent gain +0.25  frame gain +0.15
+GENERALIZATION OK -> /home/robot/sakana-ai/Drone Dataset/drone_ws/src/output/report/dreamer_variants.md

@@ -85,6 +85,8 @@ from wm_closed_loop import (  # noqa: E402
     TMAX,
     ReactivePolicy,
     WMPolicy,
+    reactive_policy,
+    wm_policy,
     _frame_tensor,
     load_or_train,
     run_episode,
@@ -424,8 +426,8 @@ def compare(n_seeds: int, seed0: int = 1000) -> dict:
     env = make_env()
 
     mk = {
-        "reactive": lambda s: ReactivePolicy(enc, nhead),
-        "wm-mpc": lambda s: WMPolicy(enc, pred, cheads, meta, speed=s),
+        "reactive": lambda s: reactive_policy(enc, nhead, meta),
+        "wm-mpc": lambda s: wm_policy(enc, pred, cheads, meta, speed=s),
     }
     for name, rec, rnd, edge, curr in (
         ("learned", False, False, False, False),

@@ -63,7 +63,7 @@ from gen_wm_dataset_hyperdrone import (  # noqa: E402
 )
 from speed_sweep import BASE_V, SPEEDS  # noqa: E402
 from train_world_model import MODEL, load_model  # noqa: E402
-from wm_closed_loop import DECIDE_EVERY, GOAL_X, TMAX, ReactivePolicy, WMPolicy  # noqa: E402
+from wm_closed_loop import DECIDE_EVERY, GOAL_X, TMAX, ReactivePolicy, WMPolicy, reactive_policy, wm_policy  # noqa: E402
 
 
 class Episode:
@@ -226,6 +226,9 @@ def fly_batch_rooms(episodes: list, flight: Flight, renderer, fov_deg: float = D
         ep.mean_clear = ep.clear_sum / max(ep.steps, 1)
 
 
+ALLOW_STOP = False  # --allow-stop: the MPC may hover when boxed in (set in main)
+
+
 def room_endurance(n_seeds, seed0, houses, house_first, enc, pred, cheads, nhead, meta, flight, make_renderer, fidelity):
     """The clutter-endurance test inside `houses` catalog houses; returns one row per start."""
     from wm_rooms import DistanceField, house_references, load_house, probe_renderer
@@ -242,8 +245,8 @@ def room_endurance(n_seeds, seed0, houses, house_first, enc, pred, cheads, nhead
         episodes = []
         for i in range(h, n_seeds, len(refs)):
             seed = seed0 + i
-            r = RoomEpisode(seed, ReactivePolicy(enc, nhead), 1.0, field, house_id)
-            w = RoomEpisode(seed, WMPolicy(enc, pred, cheads, meta), 1.0, field, house_id)
+            r = RoomEpisode(seed, reactive_policy(enc, nhead, meta), 1.0, field, house_id)
+            w = RoomEpisode(seed, wm_policy(enc, pred, cheads, meta, allow_stop=ALLOW_STOP), 1.0, field, house_id)
             w.start_xy, w.yaw = r.start_xy, r.yaw  # both policies fly the same start
             rows.append({"seed": seed, "reactive": r, "wm": w, "house": house_id})
             episodes += [r, w]
@@ -273,9 +276,12 @@ def main() -> None:
     ap.add_argument("--houses", type=int, default=4)
     ap.add_argument("--house-first", type=int, default=16, help="first catalog house; 16+ were never used for training")
     ap.add_argument("--randomize", action="store_true", help="pillar arenas with the generator's appearance randomization (unseen colours, sizes, lights)")
+    ap.add_argument("--allow-stop", action="store_true", help="rooms: let the MPC hover when both veers are predicted to hit (the oracle's +hover menu)")
     args = ap.parse_args()
     torch.set_num_threads(2)
 
+    global ALLOW_STOP
+    ALLOW_STOP = bool(args.allow_stop)
     enc, pred, cheads, nhead, meta = load_model(args.model, device="cpu")
     print(f"[INFO] checkpoint {args.model}: trained on {meta.get('source', 'pybullet')}, camera {meta.get('fov_deg', 60):g} deg; "
           f"hyperdrone arena style {args.arena_style}")
@@ -313,8 +319,8 @@ def main() -> None:
             episodes = []
             for i in range(args.seeds):
                 seed, in_path = args.seed0 + i, (i % 10) < 7
-                r = Episode(seed, ReactivePolicy(enc, nhead), in_path, 1.0, False)
-                w = Episode(seed, WMPolicy(enc, pred, cheads, meta), in_path, 1.0, False)
+                r = Episode(seed, reactive_policy(enc, nhead, meta), in_path, 1.0, False)
+                w = Episode(seed, wm_policy(enc, pred, cheads, meta), in_path, 1.0, False)
                 rows.append({"seed": seed, "in_path": in_path, "reactive": r, "wm": w})
                 episodes += [r, w]
             run_all(episodes, args.arena_style, flight, make_renderer, args.randomize)
@@ -351,8 +357,8 @@ def main() -> None:
             episodes = []
             for i in range(args.sweep_seeds):
                 seed = args.sweep_seed0 + i
-                episodes.append(Episode(seed, ReactivePolicy(enc, nhead), True, s, True))
-                episodes.append(Episode(seed, WMPolicy(enc, pred, cheads, meta, speed=s), True, s, True))
+                episodes.append(Episode(seed, reactive_policy(enc, nhead, meta), True, s, True))
+                episodes.append(Episode(seed, wm_policy(enc, pred, cheads, meta, speed=s), True, s, True))
             run_all(episodes, args.arena_style, flight, make_renderer, args.randomize)
             r = [ep for ep in episodes[0::2]]
             w = [ep for ep in episodes[1::2]]

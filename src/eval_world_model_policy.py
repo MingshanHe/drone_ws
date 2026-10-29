@@ -58,6 +58,8 @@ from train_world_model import GAP8_BUDGET_KB, MODEL  # noqa: E402
 from wm_closed_loop import (  # noqa: E402
     ReactivePolicy,
     WMPolicy,
+    reactive_policy,
+    wm_policy,
     load_or_train,
     run_episode,
 )
@@ -126,10 +128,10 @@ def evaluate(n_seeds: int, seed0: int, enc, pred, cheads, nhead, meta) -> list:
         seed, in_path = seed0 + i, (i % 10) < 7  # 70% threatened, 30% clear
         row = {"seed": seed, "in_path": in_path}
         row["reactive"] = run_episode(
-            env, ReactivePolicy(enc, nhead), seed, in_path=in_path
+            env, reactive_policy(enc, nhead, meta), seed, in_path=in_path
         )
         row["wm"] = run_episode(
-            env, WMPolicy(enc, pred, cheads, meta), seed, in_path=in_path
+            env, wm_policy(enc, pred, cheads, meta), seed, in_path=in_path
         )
         rows.append(row)
         r, w = row["reactive"], row["wm"]
@@ -192,8 +194,13 @@ def main() -> None:
         else float("nan")
     )
 
-    budget = onboard_budget(enc, pred, cheads, nhead)
-    lat_ms = measure_latency(WMPolicy(enc, pred, cheads, meta))
+    if pred is None:  # Dreamer family: one module, no GAP8 budget split (PLAN_dreamerv3.md)
+        n_params = sum(p.numel() for p in enc.parameters())
+        budget = {k: float("nan") for k in ("peak_act_kb", "workspace_kb", "total_kb", "macs_frame", "macs_decision")}
+        budget["weights_kb"] = n_params / 1024
+    else:
+        budget = onboard_budget(enc, pred, cheads, nhead)
+    lat_ms = measure_latency(wm_policy(enc, pred, cheads, meta))
     gap8_ms = budget["macs_decision"] / (GAP8_GMACS * 1e9) * 1000
 
     print(

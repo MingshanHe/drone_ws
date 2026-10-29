@@ -52,7 +52,7 @@ from gen_wm_dataset import (  # noqa: E402
 )
 from learn_policy import LearnedPolicy, _load_policy, zip_path  # noqa: E402
 from train_world_model import load_model  # noqa: E402
-from wm_closed_loop import DECIDE_EVERY, ReactivePolicy, WMPolicy  # noqa: E402
+from wm_closed_loop import DECIDE_EVERY, ReactivePolicy, WMPolicy, reactive_policy, wm_policy  # noqa: E402
 
 OUT_DIR = os.path.join(HERE, "output")
 ROW_DX = 0.75  # distance between pillar rows along x (m)
@@ -406,8 +406,8 @@ def main() -> None:
     print(f"[INFO] checkpoint {args.model or 'output/world_model.pth'}: trained on "
           f"{meta.get('source', 'pybullet')}, camera {meta.get('fov_deg', 60):g} deg")
     policies = {
-        "reactive": lambda: ReactivePolicy(enc, nhead),
-        "wm-mpc": lambda: WMPolicy(enc, pred, cheads, meta),
+        "reactive": lambda: reactive_policy(enc, nhead, meta),
+        "wm-mpc": lambda: wm_policy(enc, pred, cheads, meta),
     }
     if os.path.exists(zip_path()) and not args.no_learned:
         model = _load_policy(zip_path())

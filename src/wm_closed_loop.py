@@ -89,6 +89,7 @@ W_CENTER = 1.5  # corridor-centering prior. The camera cannot see a pillar
 # pillar at a safe 0.5 m *is* such a crossing, so far horizons must warn,
 # not forbid.
 W_HORIZON = (1.0, 0.6, 0.35, 0.2)
+STOP_CRIT = 0.5  # allow_stop: hover when both veers' near-term crit probability exceeds this
 MARGIN_WM = 0.4  # evade when going straight is predicted this much more
 # warn-dangerous (urgency-weighted) than the better veer — a *relative*
 # trigger, immune to the course-dependent probability floor that defeats any
@@ -118,8 +119,9 @@ class WMPolicy:
     (crit-weighted — inside the warn ring only the bad actions are *about to
     hit*), with a corridor-centering prior from the drone's own odometry."""
 
-    def __init__(self, enc, pred, cheads, meta, speed: float = 1.0):
-        self.enc, self.pred, self.cheads = enc, pred, cheads
+    def __init__(self, enc, pred, cheads, meta, speed: float = 1.0, allow_stop: bool = False):
+        self.enc, self.pred, self.cheads, self.meta = enc, pred, cheads, meta
+        self.allow_stop = allow_stop  # hover when both veers are about to hit (the oracle's "+hover" menu)
         names = list(meta["action_names"])
         vecs = float(speed) * np.array(meta["action_vecs"], dtype=np.float32)
         # The planner's menu. The corridor task is planar and `climb` games the
@@ -132,6 +134,7 @@ class WMPolicy:
         self.i_veers = [
             self.ids.index(names.index(n)) for n in ("veer_left", "veer_right")
         ]
+        self.i_hover = self.ids.index(names.index("hover"))
         sub = vecs[self.ids]
         self.cands = torch.tensor(sub / np.array(meta["a_norm"], dtype=np.float32))
         # per-candidate cost terms that never change: heading error vs the +x
@@ -159,10 +162,17 @@ class WMPolicy:
         if self.hold > 0:  # fly the chosen maneuver through
             self.hold -= DECIDE_EVERY
             return self.evade
+        return self._choose(self.probs(frame), state)
+
+    def probs(self, frame: np.ndarray) -> torch.Tensor:
+        """(n_cands, horizons, 2 rings): P(within k steps) for every menu candidate."""
         with torch.no_grad():
             z = self.enc(_frame_tensor(frame))  # encoder runs ONCE
             z_hat = self.pred(z.expand(len(self.cands), -1), self.cands)
-            p = torch.sigmoid(self.cheads(z_hat))  # (n_cands, horizons, 2 rings)
+            return torch.sigmoid(self.cheads(z_hat))
+
+    def _choose(self, p: torch.Tensor, state: np.ndarray) -> int:
+        """The trigger and the cost, shared by every world-model family."""
         warn = p[:, :, 0] @ self.h_w  # urgency-weighted "close soon"
         crit = p[:, :, 1] @ self.h_w  # urgency-weighted "about to hit"
         edge = float(warn[self.i_fwd]) - min(float(warn[i]) for i in self.i_veers)
@@ -174,6 +184,11 @@ class WMPolicy:
         if edge < MARGIN_WM and imminent < 0.5:
             self.evade = FORWARD  # ahead is no worse than aside — keep flying
             return FORWARD
+        if self.allow_stop and all(float(p[i, :2, 1].max()) > STOP_CRIT for i in self.i_veers):
+            # boxed in: every veer is predicted to hit within ~170 ms, so stop instead of
+            # picking the lesser crash (the indoor oracle's survival goes 32% -> 89% with this)
+            self.evade, self.hold = self.ids[self.i_hover], EVADE_HOLD
+            return self.evade
         danger = 0.25 * warn + 0.75 * crit  # crit carries the in-ring gradient
         y_after = float(state[1]) + self.vy * (EVADE_HOLD / CTRL_HZ)
         cost = (
@@ -208,8 +223,13 @@ class ReactivePolicy:
         if self.hold > 0:
             self.hold -= DECIDE_EVERY
             return self.evade
+        return self._react(self.p_now(frame), state)
+
+    def p_now(self, frame: np.ndarray) -> float:
         with torch.no_grad():
-            p_now = float(torch.sigmoid(self.nhead(self.enc(_frame_tensor(frame)))))
+            return float(torch.sigmoid(self.nhead(self.enc(_frame_tensor(frame)))))
+
+    def _react(self, p_now: float, state: np.ndarray) -> int:
         if p_now > THETA_NOW:
             q = min(self.pillars, key=lambda q: np.linalg.norm(state[0:2] - q))
             away_left = state[1] > q[1]  # privileged direction (see class note)
@@ -217,6 +237,24 @@ class ReactivePolicy:
             self.hold = EVADE_HOLD
             return self.evade
         return FORWARD
+
+
+def wm_policy(enc, pred, cheads, meta, speed: float = 1.0, allow_stop: bool = False):
+    """The latent-MPC policy for any checkpoint family. A Dreamer checkpoint (PLAN_dreamerv3.md)
+    loads as (model, None, None, None, meta) and plans by imagination with the same trigger/cost."""
+    if meta.get("family") == "dreamer":
+        from dreamer_policy import DreamerMPCPolicy
+
+        return DreamerMPCPolicy(enc, meta, speed=speed, allow_stop=allow_stop)
+    return WMPolicy(enc, pred, cheads, meta, speed=speed, allow_stop=allow_stop)
+
+
+def reactive_policy(enc, nhead, meta=None):
+    if meta is not None and meta.get("family") == "dreamer":
+        from dreamer_policy import DreamerReactivePolicy
+
+        return DreamerReactivePolicy(enc, meta)
+    return ReactivePolicy(enc, nhead)
 
 
 def run_episode(

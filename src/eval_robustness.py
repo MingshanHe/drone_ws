@@ -53,6 +53,8 @@ from train_world_model import (  # noqa: E402
 from wm_closed_loop import (  # noqa: E402
     ReactivePolicy,
     WMPolicy,
+    reactive_policy,
+    wm_policy,
     load_or_train,
     run_episode,
 )
@@ -87,8 +89,8 @@ def closed_loop(n_seeds, seed0, enc, pred, cheads, nhead, meta, randomize) -> di
     from learn_policy import LearnedPolicy, _load_policy, zip_path
 
     mk = {
-        "reactive": lambda: ReactivePolicy(enc, nhead),
-        "wm": lambda: WMPolicy(enc, pred, cheads, meta),
+        "reactive": lambda: reactive_policy(enc, nhead, meta),
+        "wm": lambda: wm_policy(enc, pred, cheads, meta),
     }
     # step-6 policies join when trained: the clean-trained one shows what the
     # storm costs it; the storm-trained (_rand) ones show what training inside
