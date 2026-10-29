@@ -39,7 +39,7 @@ def main():
     ap.add_argument("--all-rollouts", action="store_true")
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
-    matplotlib.rcParams["font.family"] = ["WenQuanYi Zen Hei", "DejaVu Sans"]
+    matplotlib.rcParams["font.family"] = ["DejaVu Sans"]
     matplotlib.rcParams["mathtext.fontset"] = "dejavusans"
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, meta = load_dreamer(args.model, device)
@@ -70,10 +70,10 @@ def main():
             if col == 0:
                 at.imshow(x[n, c - 1].permute(1, 2, 0).cpu().numpy(), interpolation="nearest")
                 ai.imshow(model.dec(model.rssm.feat(st)).clamp(0, 1)[0].permute(1, 2, 0).cpu().numpy(), interpolation="nearest")
-                at.set_title(f"rollout {rolls[n]}  最后观测帧  d={float(d[n, c - 1]):.2f}", fontsize=7, color=INK2)
-                ai.set_title("posterior 重建", fontsize=7, color=MUTED)
-                at.set_ylabel("真实", fontsize=8, color=INK2)
-                ai.set_ylabel("想象", fontsize=8, color=ORANGE, fontweight="bold")
+                at.set_title(f"rollout {rolls[n]}  last observed  d={float(d[n, c - 1]):.2f}", fontsize=7, color=INK2)
+                ai.set_title("posterior reconstruction", fontsize=7, color=MUTED)
+                at.set_ylabel("true", fontsize=8, color=INK2)
+                ai.set_ylabel("imagined", fontsize=8, color=ORANGE, fontweight="bold")
             else:
                 s = STEPS[col - 1]
                 at.imshow(x[n, c - 1 + s].permute(1, 2, 0).cpu().numpy(), interpolation="nearest")
@@ -84,7 +84,7 @@ def main():
                 a.set_xticks([]), a.set_yticks([])
                 for sp in a.spines.values():
                     sp.set_edgecolor(ORANGE if a is ai and col > 0 else INK2), sp.set_linewidth(1.0 if a is ai and col > 0 else 0.5)
-    fig.suptitle(args.title or f"{os.path.basename(args.model)} on {os.path.basename(args.data)}: 观测 {c} 步后 open-loop 想象（按最近净空从近到远均匀抽 {args.n} 条）", fontsize=10, color=INK, y=0.995)
+    fig.suptitle(args.title or f"{os.path.basename(args.model)} on {os.path.basename(args.data)}: open-loop imagination after {c} observed steps ({args.n} sequences spread over closest approach)", fontsize=10, color=INK, y=0.995)
     fig.tight_layout(rect=(0, 0, 1, 0.985))
     path = os.path.join(REP, f"imagination_examples_{args.tag}.png")
     fig.savefig(path, dpi=120, facecolor=SURFACE)

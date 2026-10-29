@@ -1,6 +1,6 @@
 # nano-Dreamer：参考 DreamerV3 重建的无人机世界模型（首轮报告）
 
-分支 `dreamerv3-world-model`。方案见 [PLAN_dreamerv3.md](PLAN_dreamerv3.md)，完整数表见 [dreamer_results.md](src/output/report/dreamer_results.md)，与之对照的旧模型报告见 [REPORT.md](REPORT.md)。
+分支 `dreamerv3-world-model`。方案见 [PLAN_dreamerv3.md](PLAN_dreamerv3.md)，完整数表见 [dreamer_results.md](src/output/report/dreamer_results.md)，与之对照的旧模型报告见 [REPORT.md](REPORT.md)。English version: [REPORT_dreamer_en.md](REPORT_dreamer_en.md)。
 
 **一句话结论**：把单帧的 JEPA 预测器换成 DreamerV3 风格的 RSSM 之后，世界模型本身明显变强——有记忆、能任意步想象、能把想象解码成画面，held-out 的碰撞预判 AUC@32 从 0.93 / 0.57 / 0.76 提到 0.96–0.99 / 0.81 / 0.84，未见房间从 0.69 提到 0.85–0.90；但闭环还没转化成收益：pybullet 柱子穿越率 34%（旧模型 11%），室内生存率仍是 16–19%。瓶颈在 MPC 读数的标定和室内动作菜单，不在模型。
 
@@ -33,6 +33,19 @@
 | 切分 | 按 rollout 80/20，按 in_path × passive 分层（与旧模型相同），所有指标在 held-out rollouts 上 |
 | 数据 | A 纯 pybullet 64 rollouts（7,680 帧）；B 纯室内 256（30,720）；C 合并 320（38,400）；三者同一超参 |
 | 代码 | `src/dreamer/{nets,rssm,data}.py`，`src/train_dreamer.py`，`src/dreamer_policy.py`，`src/draw_dreamer_pipeline.py`，`src/dreamer_dream_video.py`，`src/dreamer_summary.py` |
+
+**和 DreamerV3 的尺寸对比**：不是同一尺寸。本模型介于 DreamerV3 最小的两个预设之间（数值来自 `dreamerv3/configs.yaml`，DreamerV3 的 stoch 组数固定为 32）：
+
+| 模型 | deter | hidden | stoch × classes | CNN depth | MLP units | 参数量 |
+|---|---|---|---|---|---|---|
+| DreamerV3 size1m | 512 | 64 | 32 × 4 | 4 | 64 | ≈ 1M |
+| **本项目 nano** | 256 | 128 | 16 × 16 | 16 | 128 | **1.26M** |
+| 本项目 wide | 512 | 256 | 32 × 32 | 32 | 256 | 6.33M |
+| DreamerV3 size12m | 2048 | 256 | 32 × 16 | 16 | 256 | ≈ 12M |
+| DreamerV3 size50m | 4096 | 512 | 32 × 32 | 32 | 512 | ≈ 50M |
+| DreamerV3 size200m（默认） | 8192 | 1024 | 32 × 64 | 64 | 1024 | ≈ 200M |
+
+未移植的部分：block-diagonal GRU（`blocks: 8`）、LaProp/AGC 优化器（这里用 Adam + 梯度范数裁剪）。
 
 与 DreamerV3 原样一致的部分：RSSM 结构、离散潜变量 + unimix、KL balancing + free bits、symlog / two-hot、LayerNorm + SiLU、重建 + 奖励型头。改动：纯离线数据集（无 replay / 交互）；reward 头换成净空与碰撞头；新增反事实想象一致性；actor-critic（B2）尚未做，规划用想象 MPC（B1）。
 

@@ -111,28 +111,28 @@ def darr(ax, p, q, color=GREEN, lw=1.2):
 
 
 def draw(g):
-    matplotlib.rcParams["font.family"] = ["WenQuanYi Zen Hei", "DejaVu Sans"]
+    matplotlib.rcParams["font.family"] = ["DejaVu Sans"]
     W, H = 150, 126
     fig, ax = plt.subplots(figsize=(W / 10, H / 10), facecolor=SURFACE)
     ax.set_xlim(0, W), ax.set_ylim(0, H), ax.set_aspect("equal"), ax.axis("off")
     ax.set_facecolor(SURFACE)
-    fig.text(0.012, 0.988, f"nano-Dreamer：从数据集学一个带记忆的世界模型，再在想象里规划（{g['n_params']/1e6:.2f}M 参数，RSSM 12 Hz）", fontsize=12, fontweight="bold", color=INK, va="top")
+    fig.text(0.012, 0.988, f"nano-Dreamer: learn a world model with memory from the dataset, then plan in imagination ({g['n_params']/1e6:.2f}M parameters, RSSM at 12 Hz)", fontsize=12, fontweight="bold", color=INK, va="top")
     small = dict(fontsize=8, color=INK2, ha="center")
     tiny = dict(fontsize=7.5, color=MUTED, ha="center")
     head = dict(fontsize=11, color=INK, fontweight="bold", ha="left", va="center")
 
     # ================= ① learning the world model (unrolled over three 12 Hz steps)
-    ax.text(2, 121, "① 从数据集学世界模型（训练，GPU）", **head)
+    ax.text(2, 121, "(1) World-model learning from the dataset (training, GPU)", **head)
     box(ax, 1, 78, 148, 41.5, GRAY, alpha=0.04, lw=0.6)
-    for lbl, y in (("画面", 87.5), ("潜变量", 98.6), ("状态", 106.2)):
+    for lbl, y in (("image", 87.5), ("latent", 98.6), ("state", 106.2)):
         ax.text(3.5, y, lbl, fontsize=8, color=MUTED, ha="center", va="center", rotation=90)
     cols = [16, 41, 66]
     blues = plt.get_cmap("Blues")
     for j, cx in enumerate(cols):
         img(ax, g["frames"][j], cx - 12, 82, 11, 11)
         img(ax, g["recon"][j], cx + 1, 82, 11, 11)
-        ax.text(cx - 6.5, 81.2, f"$x_t$  帧 {g['t_abs'][j]}  d={float(g['d'][j]):.2f} m", fontsize=7, color=INK2, ha="center", va="top")
-        ax.text(cx + 6.5, 81.2, "$\\hat x_t$ 解码重建", fontsize=7, color=INK2, ha="center", va="top")
+        ax.text(cx - 6.5, 81.2, f"$x_t$  frame {g['t_abs'][j]}  d={float(g['d'][j]):.2f} m", fontsize=7, color=INK2, ha="center", va="top")
+        ax.text(cx + 6.5, 81.2, "$\\hat x_t$ reconstruction", fontsize=7, color=INK2, ha="center", va="top")
         zgrid(ax, cx - 2.6, 96, g["z"][j])
         zgrid(ax, cx + 5.2, 96, g["zp"][j], dashed=True)
         ax.text(cx, 101.6, "$z_t$ posterior", fontsize=6.8, color=INK2, ha="center", va="bottom")
@@ -155,15 +155,15 @@ def draw(g):
                 ax.add_patch(Rectangle((cx + 13.5 + q * 1.1, 102.2), 1.1, 1.1, facecolor=blues(0.3 + 0.5 * (q == 0)), edgecolor=SURFACE, linewidth=0.6, zorder=3))
             ax.text(cx + 18.5, 102.75, f"$a_t$ {g['acts'][j]}", fontsize=6.8, color=INK2, ha="left", va="center")
     ax.text(cols[-1] + 8, 104.6, "…", fontsize=12, color=MUTED, ha="left", va="center")
-    ax.text(12, 116.4, "编码器 Conv 16/32/64/64 → posterior $q(z_t|h_t,x_t)$；GRU 转移 $h_{t+1}=f(h_t,z_t,a_t)$；prior $p(\\hat z_{t+1}|h_{t+1})$ 不看画面；解码器和距离 / 碰撞 / continue 头都读 $(h_t,z_t)$",
+    ax.text(12, 116.4, "Encoder Conv 16/32/64/64 → posterior $q(z_t|h_t,x_t)$; GRU transition $h_{t+1}=f(h_t,z_t,a_t)$; prior $p(\\hat z_{t+1}|h_{t+1})$ sees no image; decoder and distance / collision / continue heads read $(h_t,z_t)$",
             fontsize=7.3, color=INK2, ha="left", va="center")
-    ax.text(12, 113.6, "$z_t$ = 16 组 × 16 类的离散潜变量（格子颜色 = 选中的类），$h_t$ = 256 维 GRU 记忆；posterior 与 prior 格子不同的组 = 没看画面时猜错的组", fontsize=7.3, color=MUTED, ha="left", va="center")
+    ax.text(12, 113.6, "$z_t$ = 16 groups × 16 classes of discrete latents (cell colour = chosen class), $h_t$ = 256-d GRU memory; cells where posterior and prior differ = groups the prior guessed wrong without the image", fontsize=7.3, color=MUTED, ha="left", va="center")
     # counterfactual branch
     gx1, gx2, gy, cw, ch = 104, 121, 82, 3.0, 2.4
     ax.text(gx1 + 2 * cw + 8.5, 110.2 - 0.2, "", fontsize=1)
-    ax.text(116, 108.0, "反事实想象一致性 $L_{cf}$：从信念 $s_t$ 出发，6 个命令各想象 8 步，读 P(k 步内 < 0.7 m)", fontsize=7.2, color=GREEN, ha="center", va="center", fontweight="bold")
-    ax.text(gx1 + 2 * cw, 100.8, "oracle 标签", fontsize=7.5, color=INK2, ha="center", va="center")
-    ax.text(gx2 + 2 * cw, 100.8, "模型想象", fontsize=7.5, color=INK2, ha="center", va="center")
+    ax.text(116, 108.0, "Counterfactual imagination loss $L_{cf}$: from belief $s_t$, imagine 8 steps per command, read P(< 0.7 m within k)", fontsize=7.2, color=GREEN, ha="center", va="center", fontweight="bold")
+    ax.text(gx1 + 2 * cw, 100.8, "oracle labels", fontsize=7.5, color=INK2, ha="center", va="center")
+    ax.text(gx2 + 2 * cw, 100.8, "model imagination", fontsize=7.5, color=INK2, ha="center", va="center")
     greys, oranges = plt.get_cmap("Greys"), plt.get_cmap("Oranges")
     for i, name in enumerate(ACTION_NAMES):
         yy = gy + (5 - i) * ch
@@ -179,24 +179,24 @@ def draw(g):
         ax.text(gx2 + k * cw + cw / 2, gy + 6 * ch + 0.4, s, fontsize=6.3, color=INK2, ha="center", va="bottom")
     darr(ax, (gx1 + 4 * cw + 0.5, gy + 3 * ch), (gx2 - 0.5, gy + 3 * ch), GREEN, 1.0)
     ax.text((gx1 + 4 * cw + gx2) / 2, gy + 3 * ch + 1.0, "BCE", fontsize=6.5, color=GREEN, ha="center", va="bottom", fontweight="bold")
-    ax.text(136.5, 100.8, "损失", fontsize=8, color=GREEN, ha="left", va="center", fontweight="bold")
-    for i, s in enumerate(("重建 MSE（逐像素求和）", "KL：dyn 1.0 / rep 0.1，free 1 nat", "净空 $d_t$：symlog two-hot 64 bins", "碰撞 <0.7 / <0.35 m、continue：BCE", "反事实：BCE（左图）")):
+    ax.text(136.5, 100.8, "Losses", fontsize=8, color=GREEN, ha="left", va="center", fontweight="bold")
+    for i, s in enumerate(("reconstruction MSE (sum over pixels)", "KL: dyn 1.0 / rep 0.1, free 1 nat", "clearance $d_t$: symlog two-hot, 64 bins", "collision <0.7 / <0.35 m, continue: BCE", "counterfactual: BCE (left)")):
         ax.text(136.5, 97.8 - i * 3.0, s, fontsize=6.8, color=INK2, ha="left", va="center")
-    ax.text(136.5, 82.5, "Adam 3e-4，batch 16 × 24 步\n20k 步 ≈ 30 min（RTX 5060 Ti）", fontsize=6.5, color=MUTED, ha="left", va="center", linespacing=1.4)
+    ax.text(136.5, 82.5, "Adam 3e-4, batch 16 × 24 steps\n20k steps ≈ 30 min (RTX 5060 Ti)", fontsize=6.5, color=MUTED, ha="left", va="center", linespacing=1.4)
 
     # ================= ② planning in imagination
-    ax.text(2, 75.2, f"② 测试时：在想象中规划（12 Hz，CPU 每次决策 3.5 ms；本例巡航 {g['speed']:.1f}× 基准速度）", **head)
+    ax.text(2, 75.2, f"(2) Test time: planning in imagination (12 Hz, 3.5 ms per decision on CPU; this example cruises at {g['speed']:.1f}× base speed)", **head)
     box(ax, 1, 36, 148, 36.5, GRAY, alpha=0.04, lw=0.6)
     img(ax, g["frame_now"], 2.5, 49, 11, 11)
-    ax.text(8, 61.3, f"当前画面 $x_t$（帧 {g['frame_id']}）", fontsize=7.5, color=INK2, ha="center", va="bottom")
+    ax.text(8, 61.3, f"current image $x_t$ (frame {g['frame_id']})", fontsize=7.5, color=INK2, ha="center", va="bottom")
     arr(ax, (13.8, 54.5), (17.2, 54.5), BLUE, lw=1.0)
     box(ax, 17.5, 48.5, 13, 12, BLUE, alpha=0.12)
-    ax.text(24, 56.3, "信念 $(h_t, z_t)$", fontsize=7.5, color=BLUE, ha="center", va="center", fontweight="bold")
-    ax.text(24, 52.8, "编码 + posterior 更新\n（跨决策保留 = 记忆）", fontsize=6.3, color=INK2, ha="center", va="center", linespacing=1.3)
+    ax.text(24, 56.3, "belief $(h_t, z_t)$", fontsize=7.5, color=BLUE, ha="center", va="center", fontweight="bold")
+    ax.text(24, 52.8, "encode + posterior\nupdate (kept across\ndecisions = memory)", fontsize=6.3, color=INK2, ha="center", va="center", linespacing=1.3)
     rows_y = [70.2, 64, 57.8, 51.6, 45.4]
-    ax.text(45, 72.6, "每个候选命令想象 8 步（prior）", fontsize=7, color=MUTED, ha="center", va="bottom")
-    ax.text(62.5, 72.6, "解码 +8 / +16 / +32 帧", fontsize=7, color=MUTED, ha="center", va="bottom")
-    ax.text(81.5, 72.6, "8 步内（8 条想象平均）", fontsize=7, color=MUTED, ha="center", va="bottom")
+    ax.text(47, 72.6, "8-step imagination (prior)", fontsize=7, color=MUTED, ha="center", va="bottom")
+    ax.text(64.5, 72.6, "decoded +8 / +16 / +32", fontsize=7, color=MUTED, ha="center", va="bottom")
+    ax.text(85.5, 72.6, "within 8 steps (8-sample mean)", fontsize=7, color=MUTED, ha="center", va="bottom")
     ax.text(77, 70.3, "P<0.7", fontsize=6.8, color=INK2, ha="center", va="center")
     ax.text(85.5, 70.3, "P<0.35", fontsize=6.8, color=INK2, ha="center", va="center")
     ax.text(93.5, 70.3, "$\\hat d_{+32}$", fontsize=6.8, color=INK2, ha="center", va="center")
@@ -219,38 +219,38 @@ def draw(g):
     arr(ax, (55.3, 54.5), (55.9, 54.5), ORANGE, lw=0.5)
     # decision box
     box(ax, 101, 38.5, 47.5, 32, ORANGE, alpha=0.07)
-    ax.text(124.75, 68.2, "触发与代价：与单帧模型的 MPC 完全相同", fontsize=8, color=ORANGE, ha="center", va="center", fontweight="bold")
-    lines = [f"触发：warn(前进) − min warn(绕行) ≥ {MARGIN_WM}，",
-             "　　　或 170 ms 内 P(<0.35 m) > 0.5（兜底）",
-             "代价 = 6·(0.25·warn + 0.75·crit) + 航向 + 1.5·|y| − 1.2·进度",
-             "　　　（warn / crit 为 4 个视界的紧迫度加权和）",
-             f"本例：差值 = {g['edge']:.2f}，兜底 = {g['imminent']:.2f} → 触发",
-             f"→ 选代价最低的绕行：{g['decision']}，保持 0.5 s（{EVADE_HOLD} 步）"]
+    ax.text(124.75, 68.2, "Trigger and cost: identical to the one-frame model's MPC", fontsize=8, color=ORANGE, ha="center", va="center", fontweight="bold")
+    lines = [f"trigger: warn(forward) − min warn(veers) ≥ {MARGIN_WM},",
+             "      or P(<0.35 m) within 170 ms > 0.5 (backstop)",
+             "cost = 6·(0.25·warn + 0.75·crit) + heading + 1.5·|y| − 1.2·progress",
+             "      (warn / crit: urgency-weighted sums over 4 horizons)",
+             f"here: margin = {g['edge']:.2f}, backstop = {g['imminent']:.2f} → trigger",
+             f"→ cheapest veer: {g['decision']}, held 0.5 s ({EVADE_HOLD} steps)"]
     for i, s in enumerate(lines):
         ax.text(103, 64.3 - i * 4.0, s, fontsize=7.2, color=ORANGE if i >= 4 else INK2, ha="left", va="center", fontweight="bold" if i == 5 else "normal")
     ax.plot([124.75, 124.75, 24], [38.4, 37.4, 37.4], color=BLUE, linewidth=0.9, linestyle=(0, (4, 2.5)), zorder=5)
     arr(ax, (24, 37.4), (24, 48.3), BLUE, lw=0.9, dashed=True)
-    ax.text(72, 38.6, "执行的命令 $a_t$ → 48 Hz 速度环，并作为下一次信念更新的输入", fontsize=7, color=BLUE, ha="center", va="bottom")
+    ax.text(72, 38.6, "executed command $a_t$ → 48 Hz velocity loop, and input to the next belief update", fontsize=7, color=BLUE, ha="center", va="bottom")
 
     # ================= ③ closed loop
-    ax.text(2, 33.2, "③ 数据与闭环", **head)
+    ax.text(2, 33.2, "(3) Data and closed loop", **head)
     bw, bh, by = 26, 20, 7
     xs = [4, 34, 64, 94, 124]
-    titles = ["数据集", "训练", "checkpoint", "策略", "模拟器"]
-    bodies = ["rollout 序列 @ 48 Hz：\n64×64 画面、保持的命令、\n净空距离、反事实 oracle 标签\nA 64 / B 256 / C 320 rollouts",
-              "12 Hz 子采样（4 个相位）\n序列 24 步，batch 16\n20k 步，bf16，≈ 30 min\n三个训练集同一超参",
-              f"{g['n_params']/1e6:.2f}M 参数 ≈ 1.2 MB int8\n编码器 + RSSM + 解码器\n+ 距离 / 碰撞 / continue 头\nmeta.family = \"dreamer\"",
-              "DreamerMPCPolicy\n信念更新 + 5 候选 × 8 步 × 8 条\n触发 / 代价同 WMPolicy\n12 Hz，CPU 3.5 ms / 决策",
-              "pybullet 柱子 300 条 course\nProcTHOR 房 16–23 300 起点\n48 Hz 速度控制，0.22 m 记撞"]
+    titles = ["dataset", "training", "checkpoint", "policy", "simulator"]
+    bodies = ["rollout sequences @ 48 Hz:\n64×64 images, held commands,\nclearance, counterfactual oracle\nA 64 / B 256 / C 320 rollouts",
+              "12 Hz subsampling (4 phases)\n24-step sequences, batch 16\n20k steps, bf16, ≈ 30 min\nsame hyper-parameters for A/B/C",
+              f"{g['n_params']/1e6:.2f}M params ≈ 1.2 MB int8\nencoder + RSSM + decoder\n+ distance / collision / continue\nmeta.family = \"dreamer\"",
+              "DreamerMPCPolicy\nbelief update + 5 cands × 8 steps × 8\ntrigger / cost as WMPolicy\n12 Hz, 3.5 ms per decision (CPU)",
+              "pybullet pillars: 300 courses\nProcTHOR houses 16–23: 300 starts\n48 Hz velocity control, crash < 0.22 m"]
     for x, t, b in zip(xs, titles, bodies):
-        box(ax, x, by, bw, bh, BLUE if t != "模拟器" else GRAY, alpha=0.08)
+        box(ax, x, by, bw, bh, BLUE if t != "simulator" else GRAY, alpha=0.08)
         ax.text(x + bw / 2, by + bh - 2.2, t, fontsize=8.5, color=INK, ha="center", va="center", fontweight="bold")
         ax.text(x + 1.2, by + bh - 5.0, b, fontsize=6.6, color=INK2, ha="left", va="top", linespacing=1.35)
     for x in xs[:-1]:
         arr(ax, (x + bw + 0.3, by + bh / 2 + 1.5), (x + 30 - 0.3, by + bh / 2 + 1.5), INK2, lw=1.0)
     arr(ax, (xs[4] - 0.3, by + 3.5), (xs[3] + bw + 0.3, by + 3.5), INK2, lw=1.0)
-    ax.text(xs[3] + bw + 2, by + 1.8, "64×64 画面", fontsize=6.3, color=MUTED, ha="center", va="center")
-    ax.text(xs[3] + bw + 2, by + bh / 2 + 3.2, "速度命令", fontsize=6.3, color=MUTED, ha="center", va="center")
+    ax.text(xs[3] + bw + 2, by + 1.8, "64×64 image", fontsize=6.3, color=MUTED, ha="center", va="center")
+    ax.text(xs[3] + bw + 2, by + bh / 2 + 3.2, "velocity cmd", fontsize=6.3, color=MUTED, ha="center", va="center")
     img(ax, g["frame_now"], xs[4] + 12.5, by + 1.2, 6, 6)
     img(ax, g["room_frame"], xs[4] + 19.2, by + 1.2, 6, 6)
 

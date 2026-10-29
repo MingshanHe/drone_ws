@@ -22,9 +22,9 @@ EV = os.path.join(HERE, "output", "evals")
 REP = os.path.join(HERE, "output", "report")
 from draw_pipeline import BLUE, GRAY, GREEN, INK, INK2, MUTED, ORANGE, SURFACE  # noqa: E402
 
-PALETTE = [BLUE, ORANGE, GREEN, "#8e44ad", "#c0392b", "#16a085", "#7f8c8d", "#d35400"]
-TERMS = [("rec", "重建 MSE（逐像素求和）", True), ("dyn", "KL dyn（nats，free 1）", False), ("rep", "KL rep", False), ("dist", "净空 two-hot CE", False),
-         ("col", "碰撞 BCE", True), ("cont", "continue BCE", True), ("cf", "反事实 BCE", True)]
+PALETTE = [BLUE, ORANGE, GREEN, "#8e44ad", "#c0392b", "#111111", "#7f8c8d", "#d4a017"]
+TERMS = [("rec", "reconstruction MSE (sum over pixels)", True), ("dyn", "KL dyn (nats, free 1)", False), ("rep", "KL rep", False), ("dist", "clearance two-hot CE", False),
+         ("col", "collision BCE", True), ("cont", "continue BCE", True), ("cf", "counterfactual BCE", True)]
 
 
 def parse(tag):
@@ -52,11 +52,11 @@ def main():
     tags = args.tags or sorted(os.path.basename(p)[8:-4] for p in glob.glob(os.path.join(EV, "dreamer_*.log")) if "_cluttered" not in p and "@" not in p and "offline" not in p and "video" not in p)
     runs = {t: parse(t) for t in tags}
     runs = {t: r for t, r in runs.items() if r}
-    matplotlib.rcParams["font.family"] = ["WenQuanYi Zen Hei", "DejaVu Sans"]
+    matplotlib.rcParams["font.family"] = ["DejaVu Sans"]
     matplotlib.rcParams["mathtext.fontset"] = "dejavusans"
     matplotlib.rcParams["axes.unicode_minus"] = False
     fig, axes = plt.subplots(3, 3, figsize=(15, 10.5), facecolor=SURFACE)
-    fig.suptitle("nano-Dreamer 训练曲线：每 250 步的训练损失（左 7 格）与 held-out 评估点（右下 2 格）", fontsize=12.5, fontweight="bold", color=INK, y=0.985)
+    fig.suptitle("nano-Dreamer training curves: training losses every 250 steps (first 7 panels) and held-out evaluations (last 2)", fontsize=12.5, fontweight="bold", color=INK, y=0.985)
     axes = axes.flatten()
     for ax in axes:
         ax.set_facecolor(SURFACE)
@@ -71,14 +71,14 @@ def main():
         ax.set_title(title, fontsize=9.5, color=INK, loc="left")
         if logy:
             ax.set_yscale("log")
-        ax.set_xlabel("步", fontsize=8, color=INK2)
-    for i, (key, title) in enumerate(((1, "held-out open-loop AUC@32"), (2, "held-out 解码增益 @32"))):
+        ax.set_xlabel("step", fontsize=8, color=INK2)
+    for i, (key, title) in enumerate(((1, "held-out open-loop AUC@32"), (2, "held-out decoded gain @32"))):
         ax = axes[7 + i]
         for j, (t, r) in enumerate(runs.items()):
             if r["evals"]:
                 ax.plot([e[0] for e in r["evals"]], [e[key] for e in r["evals"]], color=PALETTE[j % len(PALETTE)], linewidth=1.6, marker="o", markersize=4, label=t)
         ax.set_title(title, fontsize=9.5, color=INK, loc="left")
-        ax.set_xlabel("步", fontsize=8, color=INK2)
+        ax.set_xlabel("step", fontsize=8, color=INK2)
         if key == 1:
             ax.set_ylim(0.6, 1.02)
         else:

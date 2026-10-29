@@ -37,11 +37,11 @@ from train_dreamer import load_dreamer  # noqa: E402
 from train_world_model import _split_rollouts, roc_auc  # noqa: E402
 
 CASES = [  # key, label, checkpoint, dataset, held-out split?, colour
-    ("pybullet", "pybullet held-out（模型 A）", "world_model_dreamer_pybullet.pth", "wm_dataset.npz", True, BLUE),
-    ("rooms_unseen", "未见房间 16–23（模型 C 6k）", "world_model_dreamer_pb_plus_rooms6k.pth", "wm_dataset_rooms_unseen60.npz", False, ORANGE),
+    ("pybullet", "pybullet held-out (model A)", "world_model_dreamer_pybullet.pth", "wm_dataset.npz", True, BLUE),
+    ("rooms_unseen", "unseen rooms 16–23 (model C 6k)", "world_model_dreamer_pb_plus_rooms6k.pth", "wm_dataset_rooms_unseen60.npz", False, ORANGE),
 ]
 EXTRA = [  # optional variants, drawn as extra curves (no strip) when their checkpoint exists
-    ("rooms_unseen_1280", "未见房间·1280 条+overshoot（B）", "world_model_dreamer_rooms1280_os.pth", "wm_dataset_rooms_unseen60.npz", False, GREEN),
+    ("rooms_unseen_1280", "unseen rooms, 1280 rollouts + overshoot (B)", "world_model_dreamer_rooms1280_os.pth", "wm_dataset_rooms_unseen60.npz", False, GREEN),
 ]
 CONTEXT = 8
 SHOW_STEPS = [1, 2, 4, 6, 8, 12, 16, 22]  # imagined steps shown in the strips (x4 = frames)
@@ -125,20 +125,20 @@ def jepa_refs():
 
 
 def figure(results, strips, refs):
-    matplotlib.rcParams["font.family"] = ["WenQuanYi Zen Hei", "DejaVu Sans"]
+    matplotlib.rcParams["font.family"] = ["DejaVu Sans"]
     ncol = len(SHOW_STEPS) + 1
     fig = plt.figure(figsize=(16, 13.2), facecolor=SURFACE)
     gs = fig.add_gridspec(4, ncol, hspace=0.32, wspace=0.08, left=0.04, right=0.985, top=0.93, bottom=0.40)
     gs2 = fig.add_gridspec(1, 4, wspace=0.34, left=0.05, right=0.985, top=0.31, bottom=0.07)
-    fig.suptitle("nano-Dreamer 想象质量评价：观测 8 步（667 ms）后不再看画面，纯凭记忆和命令向前想象", fontsize=13, fontweight="bold", color=INK, y=0.975)
+    fig.suptitle("nano-Dreamer imagination quality: observe 8 steps (667 ms), then imagine from memory and commands only, no further images", fontsize=13, fontweight="bold", color=INK, y=0.975)
     for ci, (key, label, _, _, _, color) in enumerate(CASES):
         st = strips[key]
-        for row, (imgs, ds, name) in enumerate(((st["true"], st["d_true"], "真实"), (st["imag"], st["d_imag"], "想象"))):
+        for row, (imgs, ds, name) in enumerate(((st["true"], st["d_true"], "true"), (st["imag"], st["d_imag"], "imagined"))):
             r = 2 * ci + row
             ax = fig.add_subplot(gs[r, 0])
             ax.imshow(st["ctx"] if row == 0 else st["ctx"], interpolation="nearest")
-            ax.set_title(f"最后观测帧  d={st['d_ctx']:.2f}" if row == 0 else "（同一帧）", fontsize=7.5, color=INK2 if row == 0 else MUTED)
-            ax.set_ylabel(f"{label}\n{name}", fontsize=8.5, color=color if row == 1 else INK2, fontweight="bold" if row == 1 else "normal")
+            ax.set_title(f"last observed  d={st['d_ctx']:.2f}" if row == 0 else "(same frame)", fontsize=7.5, color=INK2 if row == 0 else MUTED)
+            ax.set_ylabel(f"{label.split(' (')[0]}\n{name}", fontsize=8.5, color=color if row == 1 else INK2, fontweight="bold" if row == 1 else "normal")
             ax.set_xticks([]), ax.set_yticks([])
             for sp in ax.spines.values():
                 sp.set_edgecolor(INK2), sp.set_linewidth(0.6)
@@ -146,7 +146,7 @@ def figure(results, strips, refs):
                 ax = fig.add_subplot(gs[r, k + 1])
                 ax.imshow(img, interpolation="nearest")
                 if row == 0:
-                    ax.set_title(f"+{SHOW_STEPS[k] * STRIDE} 帧  d={dv:.2f}", fontsize=7.5, color=INK2)
+                    ax.set_title(f"+{SHOW_STEPS[k] * STRIDE} frames  d={dv:.2f}", fontsize=7.5, color=INK2)
                 else:
                     ax.set_title(f"$\\hat d$={dv:.2f}  P<0.7={st['p_imag'][k]:.2f}", fontsize=7.5, color=color)
                 ax.set_xticks([]), ax.set_yticks([])
@@ -163,32 +163,32 @@ def figure(results, strips, refs):
     for key, label, _, _, _, color in CASES + [c for c in EXTRA if c[0] in results]:
         r = results[key]
         h = np.arange(1, len(r["mse_pred"]) + 1) * STRIDE
-        axes[0].plot(h, r["mse_pred"], color=color, linewidth=2, label=f"{label.split('（')[0]}：想象解码")
-        axes[0].plot(h, r["mse_copy"], color=color, linewidth=1.4, linestyle="--", alpha=0.8, label="　基线：复制最后观测帧")
-        axes[1].plot(h, r["mae_pred"], color=color, linewidth=2, label=f"{label.split('（')[0]}：dist 头")
-        axes[1].plot(h, r["mae_persist"], color=color, linewidth=1.4, linestyle="--", alpha=0.8, label="　基线：净空不变")
+        axes[0].plot(h, r["mse_pred"], color=color, linewidth=2, label=f"{label.split(' (')[0]}: imagined, decoded")
+        axes[0].plot(h, r["mse_copy"], color=color, linewidth=1.4, linestyle="--", alpha=0.8, label="   baseline: copy last observed frame")
+        axes[1].plot(h, r["mae_pred"], color=color, linewidth=2, label=f"{label.split(' (')[0]}: distance head")
+        axes[1].plot(h, r["mae_persist"], color=color, linewidth=1.4, linestyle="--", alpha=0.8, label="   baseline: clearance unchanged")
         hk = np.arange(1, 9) * STRIDE
-        axes[2].plot(hk, r["auc"], color=color, linewidth=2, marker="o", markersize=4, label=f"{label.split('（')[0]}：Dreamer open-loop")
+        axes[2].plot(hk, r["auc"], color=color, linewidth=2, marker="o", markersize=4, label=f"{label.split(' (')[0]}: Dreamer open-loop")
         if key in refs and key in dict((c[0], c) for c in CASES):
-            axes[2].plot(list(HORIZONS), refs[key], color=color, linewidth=0, marker="s", markersize=7, markerfacecolor="none", markeredgewidth=1.6, label="　旧 JEPA 单帧（直接读头）")
-        axes[3].plot(CONTEXTS, r["gain32_vs_context"], color=color, linewidth=2, marker="o", markersize=4, label=label.split("（")[0])
-    axes[0].set_title("(a) 解码画面误差 vs 想象步长（越低越好）", fontsize=9.5, color=INK, loc="left")
-    axes[0].set_xlabel("想象到未来多少帧（48 Hz）", fontsize=8.5, color=INK2), axes[0].set_ylabel("逐像素 MSE", fontsize=8.5, color=INK2)
-    axes[1].set_title("(b) 净空距离误差 vs 想象步长", fontsize=9.5, color=INK, loc="left")
-    axes[1].set_xlabel("想象到未来多少帧", fontsize=8.5, color=INK2), axes[1].set_ylabel("MAE (m)", fontsize=8.5, color=INK2)
-    axes[2].set_title("(c) 碰撞预判 AUC（k 帧内进 0.7 m）vs 视界，4 个起点合并", fontsize=9.5, color=INK, loc="left")
-    axes[2].set_xlabel("视界 k（帧）", fontsize=8.5, color=INK2), axes[2].set_ylabel("ROC-AUC", fontsize=8.5, color=INK2)
+            axes[2].plot(list(HORIZONS), refs[key], color=color, linewidth=0, marker="s", markersize=7, markerfacecolor="none", markeredgewidth=1.6, label="   old one-frame JEPA (direct head)")
+        axes[3].plot(CONTEXTS, r["gain32_vs_context"], color=color, linewidth=2, marker="o", markersize=4, label=label.split(" (")[0])
+    axes[0].set_title("(a) decoded-image error (lower = better)", fontsize=9.5, color=INK, loc="left")
+    axes[0].set_xlabel("imagined frames ahead (48 Hz)", fontsize=8.5, color=INK2), axes[0].set_ylabel("per-pixel MSE", fontsize=8.5, color=INK2)
+    axes[1].set_title("(b) clearance error of the distance head", fontsize=9.5, color=INK, loc="left")
+    axes[1].set_xlabel("imagined frames ahead", fontsize=8.5, color=INK2), axes[1].set_ylabel("MAE (m)", fontsize=8.5, color=INK2)
+    axes[2].set_title("(c) collision foresight AUC (< 0.7 m within k)", fontsize=9.5, color=INK, loc="left")
+    axes[2].set_xlabel("horizon k (frames)", fontsize=8.5, color=INK2), axes[2].set_ylabel("ROC-AUC", fontsize=8.5, color=INK2)
     axes[2].axhline(0.5, color=MUTED, linewidth=0.8, linestyle=":"), axes[2].set_ylim(0.45, 1.02)
-    axes[3].set_title("(d) 记忆的价值：解码增益@+32 vs 先观测几步", fontsize=9.5, color=INK, loc="left")
-    axes[3].set_xlabel("想象前观测的步数（12 Hz）", fontsize=8.5, color=INK2), axes[3].set_ylabel("增益 = 1 − MSE想象/MSE复制", fontsize=8.5, color=INK2)
+    axes[3].set_title("(d) value of memory: gain @+32 frames", fontsize=9.5, color=INK, loc="left")
+    axes[3].set_xlabel("steps observed before imagining (12 Hz)", fontsize=8.5, color=INK2), axes[3].set_ylabel("gain = 1 − MSE(imagined) / MSE(copy)", fontsize=8.5, color=INK2)
     axes[3].axhline(0, color=MUTED, linewidth=0.8, linestyle=":"), axes[3].set_xticks(CONTEXTS)
     for ax, loc in zip(axes, ("upper left", "upper left", "lower right", "lower right")):
         ax.legend(fontsize=6.8, frameon=False, loc=loc)
-    n = "，".join(f"{label.split('（')[0]} {results[key]['n_seq']} 条序列" for key, label, *_ in CASES)
+    n = ", ".join(f"{label.split(' (')[0]}: {results[key]['n_seq']} sequences" for key, label, *_ in CASES)
     if any(c[0] in results for c in EXTRA):
-        n += "；绿线 = 重点训练 imagination 的室内模型：1280 条 rollout（5×）+ 8 步 overshooting，同样 1.26M 参数"
-    fig.text(0.04, 0.022, f"曲线为所有 held-out / 未见序列的平均（{n}，每条 rollout 4 个相位）。", fontsize=7.8, color=MUTED)
-    fig.text(0.04, 0.006, "上方画面条：各取一条最近净空 ≈ 0.5 m 的序列。想象全程不看新画面，命令取实际飞过的命令。", fontsize=7.8, color=MUTED)
+        n += "; green = indoor model trained for imagination: 1280 rollouts (5×) + 8-step overshooting, same 1.26M parameters"
+    fig.text(0.04, 0.022, f"Curves average every held-out / unseen sequence ({n}; 4 phases per rollout).", fontsize=7.8, color=MUTED)
+    fig.text(0.04, 0.006, "Strips: one sequence each whose closest approach is ≈ 0.5 m. Imagination sees no new image; the commands are the ones actually flown.", fontsize=7.8, color=MUTED)
     path = os.path.join(REP, "imagination_eval.png")
     fig.savefig(path, dpi=140, facecolor=SURFACE)
     plt.close(fig)
