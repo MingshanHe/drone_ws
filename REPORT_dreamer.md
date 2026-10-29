@@ -114,6 +114,42 @@
 
 上面的画面条：pybullet 一条 held-out 序列，想象能画出柱子逼近、撑满、从侧面滑走；未见房间只有墙、地面和一团家具色块，但 $\hat d$ 和 P(< 0.7) 的走势跟着真值走。
 
+### 3.5 重点训练 imagination（室内）
+
+**为什么室内想象比 DreamerV3 差那么多。** 和原版 [danijar/dreamerv3](https://github.com/danijar/dreamerv3) 相比，按影响排序：
+
+1. **数据量**：DreamerV3 在线交互，replay 里几百万帧，且在同一个环境里评测；我们室内只有 256 条 rollout（16 间房，30,720 帧），离线固定，4k 步后 held-out 就开始退化（[loss 曲线](src/output/report/dreamer_losses.png)）。
+2. **训练目标只有一步**：DreamerV3 只用单步 posterior / prior KL；室内 KL 停在 8–11 nats，说明 prior 预测不了 posterior，多步想象时误差累积。
+3. **模型容量**：DreamerV3 最小预设 size12m（deter 2048），我们 1.26M。但实验表明这不是主因（见下表 wide）。
+4. **其它**：观测只有图像（没喂姿态，而机体俯仰最高 30° 会带着相机转）；rollout 只有 2.5 s，命令每 1 s 换一次。
+
+**做了什么。** 新增 `--overshoot K`（PlaNet 式 latent / pixel overshooting，DreamerV3 没有）：从随机 posterior 状态用 prior 想象 K = 8 步，要求想象状态解码出真实未来帧、KL 对齐到那一步的 posterior、读出真实净空和碰撞标签，直接优化 open-loop 评测量。另外用同样 16 间训练房、新 seed 再生成 1024 条 rollout，合并成 1280 条（`wm_dataset_rooms_train60_1280.npz`）。
+
+| 室内模型（held-out 训练房，open-loop） | 参数 | AUC@32 | 解码增益 @8 / @32 | 想象 +32 帧净空误差 |
+|---|---|---|---|---|
+| B，256 条，20k 步 | 1.26M | 0.76 | +0.03 / +0.05 | 0.46 m |
+| B，256 条，6k 步早停 | 1.26M | 0.81 | +0.16 / +0.18 | 0.41 m |
+| wide，256 条，8k 步 | 6.33M | 0.75 | +0.09 / +0.10 | 0.46 m |
+| wide + 外观增广，256 条 | 6.33M | 0.76 | −0.13 / −0.07 | 0.49 m |
+| wide + overshoot，256 条，6k 步 | 6.33M | 0.76 | +0.14 / +0.13 | 0.46 m |
+| **nano + overshoot，1280 条，12k 步** | 1.26M | **0.87** | **+0.30 / +0.39** | **0.32 m** |
+
+在**未见房间 16–23** 上（256 条序列，`eval_imagination.py`，即 3.4 节图里的绿线）：
+
+| 未见房间 | 旧 C 6k | 1280 条 + overshoot |
+|---|---|---|
+| open-loop AUC @4 / @32 | 0.85 / 0.81 | **0.89 / 0.87** |
+| 解码 MSE @+32 帧（复制基线 0.069） | 0.048 | **0.033** |
+| 解码 MSE @+88 帧（复制基线 0.140） | 0.121 | **0.085** |
+| 净空误差 @+32 帧（"不变"基线 0.37 m） | 0.39 m | **0.27 m** |
+| 解码增益@+32，观测 1 / 4 步后 | −0.19 / +0.53 | **+0.25 / +0.71** |
+
+结论：**瓶颈是数据和训练目标，不是容量**——加宽到 6.3M 没用，加外观增广反而更差；5 倍数据 + overshooting 让未见房间的想象第一次全程优于"复制当前帧"，净空估计也第一次优于"不变"基线。
+
+![未见房间 1280+overshoot](src/output/report/imagination_examples_rooms_unseen_1280os.png)
+
+上图与 [旧模型 C 6k 的同一批 8 条序列](src/output/report/imagination_examples_rooms_unseen_C6k.png) 对照（另有 [held-out 训练房的例子](src/output/report/imagination_examples_rooms_heldout_1280os.png)）。想象仍然是糊的——墙、地面、大件家具的色块和位置对得上，纹理和小物体画不出来；但随前进画面变暗、接近墙面时 P(< 0.7) 升起来的时机和真实净空一致。要达到 DreamerV3 那种清晰度，下一步是继续加数据（更多房子而不只是同一批房子更多 seed）、把姿态作为观测输入，再考虑放大模型。
+
 ## 4. 演示视频
 
 **4.1 "梦"：真实画面 vs 模型想象。** 左边是相机真实看到的画面（12 Hz），右边前 8 步是 posterior 重建，之后模型**不再看任何画面**，只凭记忆和飞过的命令向前想象，每一帧都是想象状态解码出来的；蓝字是想象状态读出的净空距离和 P(< 0.7 m)。

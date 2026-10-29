@@ -41,7 +41,7 @@ CASES = [  # key, label, checkpoint, dataset, held-out split?, colour
     ("rooms_unseen", "未见房间 16–23（模型 C 6k）", "world_model_dreamer_pb_plus_rooms6k.pth", "wm_dataset_rooms_unseen60.npz", False, ORANGE),
 ]
 EXTRA = [  # optional variants, drawn as extra curves (no strip) when their checkpoint exists
-    ("rooms_unseen_1280", "未见房间（B：1280 条 + overshoot）", "world_model_dreamer_rooms1280_os.pth", "wm_dataset_rooms_unseen60.npz", False, GREEN),
+    ("rooms_unseen_1280", "未见房间·1280 条+overshoot（B）", "world_model_dreamer_rooms1280_os.pth", "wm_dataset_rooms_unseen60.npz", False, GREEN),
 ]
 CONTEXT = 8
 SHOW_STEPS = [1, 2, 4, 6, 8, 12, 16, 22]  # imagined steps shown in the strips (x4 = frames)
@@ -187,7 +187,8 @@ def figure(results, strips, refs):
     n = "，".join(f"{label.split('（')[0]} {results[key]['n_seq']} 条序列" for key, label, *_ in CASES)
     if any(c[0] in results for c in EXTRA):
         n += "；绿线 = 重点训练 imagination 的室内模型：1280 条 rollout（5×）+ 8 步 overshooting，同样 1.26M 参数"
-    fig.text(0.04, 0.015, f"曲线为所有 held-out / 未见序列的平均（{n}，每条 rollout 4 个相位）；上方画面条：各取一条最近净空 ≈ 0.5 m 的序列。想象全程不看新画面，命令取实际飞过的命令。", fontsize=7.8, color=MUTED)
+    fig.text(0.04, 0.022, f"曲线为所有 held-out / 未见序列的平均（{n}，每条 rollout 4 个相位）。", fontsize=7.8, color=MUTED)
+    fig.text(0.04, 0.006, "上方画面条：各取一条最近净空 ≈ 0.5 m 的序列。想象全程不看新画面，命令取实际飞过的命令。", fontsize=7.8, color=MUTED)
     path = os.path.join(REP, "imagination_eval.png")
     fig.savefig(path, dpi=140, facecolor=SURFACE)
     plt.close(fig)
