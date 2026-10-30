@@ -1,0 +1,3 @@
+[INFO] dataset src/output/wm_dataset_pb_plus_rooms.npz: source=hyperdrone+pybullet, camera 60 deg
+[INFO] 320 rollouts x 30 model steps (4 frames/step); train/val rollouts 256/64; params 156.87M (153195 KB int8); device cuda
+[   100] rec=6985.884 dist=5.257 col=0.466 cont=0.286 dyn=3.628 rep=3.628 cf=0.947 gn=27588.275  (3697 ms/step)

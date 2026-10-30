@@ -161,7 +161,78 @@
 
 ![未见房间 1280+overshoot](src/output/report/imagination_examples_rooms_unseen_1280os.png)
 
-上图与 [旧模型 C 6k 的同一批 8 条序列](src/output/report/imagination_examples_rooms_unseen_C6k.png) 对照（另有 [held-out 训练房的例子](src/output/report/imagination_examples_rooms_heldout_1280os.png)）。想象仍然是糊的——墙、地面、大件家具的色块和位置对得上，纹理和小物体画不出来；但随前进画面变暗、接近墙面时 P(< 0.7) 升起来的时机和真实净空一致。要达到 DreamerV3 那种清晰度，下一步是继续加数据（更多房子而不只是同一批房子更多 seed）、把姿态作为观测输入，再考虑放大模型。
+上图与 [旧模型 C 6k 的同一批 8 条序列](src/output/report/imagination_examples_rooms_unseen_C6k.png) 对照（另有 [它自己 1280 条训练数据中 held-out rollout 的例子](src/output/report/imagination_examples_rooms_heldout_1280os.png)）。想象仍然是糊的——墙、地面、大件家具的色块和位置对得上，纹理和小物体画不出来；但随前进画面变暗、接近墙面时 P(< 0.7) 升起来的时机和真实净空一致。要达到 DreamerV3 那种清晰度，下一步是继续加数据（更多房子而不只是同一批房子更多 seed）、把姿态作为观测输入，再考虑放大模型。
+
+**DreamerV3 size200m，只在 hybrid 数据上训练。** 用和模型 C 相同的 hybrid 数据（64 条 pybullet + 256 条室内），训练 DreamerV3 的 size200m 预设：deter 8192、32 × 64 潜变量、CNN depth 64（mults [2, 3, 4, 4]）、MLP units 1024、8 块的 block-diagonal GRU、255 个 two-hot bins。因为不含 actor / critic，这里是 157M 参数。训练设置：batch 32 × 24 步（16 GB 显卡能放下的最大 batch；batch 64 会溢出到系统内存，慢 14 倍）、Adam 1e-4、10k 步、每步 0.39 s（约 70 分钟），每 1k 步做 held-out 评估，保留最好的 checkpoint（第 5000 步）。即 3.4 节图中紫色的画面条和曲线；同一批 8 条未见房间序列的例子图见 [size200m](src/output/report/imagination_examples_rooms_unseen_size200m.png)（对照 [nano C 6k](src/output/report/imagination_examples_rooms_unseen_C6k.png)），训练数据自身 held-out rollout 的例子见 [这里](src/output/report/imagination_examples_rooms_heldout_size200m.png)，训练曲线（紫色）见 [loss 图](src/output/report/dreamer_losses.png)。
+
+| hybrid 数据（C） | nano 6k（1.26M） | size200m（157M） | nano，1280 条室内 + overshoot（参照） |
+|---|---|---|---|
+| C 的 held-out：open-loop AUC@32 | 0.83 | **0.87** | — |
+| C 的 held-out：解码增益 @8 / @32 | +0.18 / +0.14 | +0.19 / **+0.25** | — |
+| C 的 held-out：veer ranking | 0.82 | **0.85** | — |
+| 未见房间：open-loop AUC @4 / @32 | 0.85 / 0.81 | 0.87 / 0.86 | **0.89 / 0.87** |
+| 未见房间：解码 MSE @+32 帧（复制 0.069） | 0.047 | 0.046 | **0.032** |
+| 未见房间：解码 MSE @+88 帧（复制 0.140） | 0.113 | 0.107 | **0.085** |
+| 未见房间：净空误差 @+32 帧（基线 0.37 m） | 0.40 m | 0.36 m | **0.28 m** |
+| 未见房间：观测 1 / 4 步后的增益 @+32 | −0.16 / +0.53 | −0.02 / +0.58 | **+0.25 / +0.71** |
+
+读法：在同样 320 条数据上把参数放大 125 倍，有小而一致的提升：未见房间的碰撞预判 AUC 高 0.05，held-out 解码增益 @32 从 0.14 升到 0.25。想象画面的纹理也更锐利，画面条里能画出窗框和边缘；但它也会编出真实画面里没有的窗户，在未见房间的解码误差上几乎没赢 nano。用 5 倍室内数据加 overshooting 的 nano 模型，在所有未见房间指标上仍明显领先。held-out 指标在第 5000 步最好，之后下降，而训练重建损失还在降，说明大模型在 320 条数据上过拟合。这印证了上面的结论：**在这个数据量下，更多数据和多步训练目标比 DreamerV3 级别的容量更有用。**
+
+**训练集 vs held-out vs 未见（检查是否在背数据）。** `src/eval_train_gap.py` 对两个 hybrid 数据模型，在它们训练用过的 rollout、C 的 held-out rollout 和未见房间上，做同样的 open-loop 想象打分（[图](src/output/report/train_gap.png)）。
+
+![训练集 vs held-out vs 未见](src/output/report/train_gap.png)
+
+| 组（C 数据的切分） | size200m 增益 @32 / @88 | size200m 净空误差 @32 | size200m AUC@32 | nano C 6k 增益 @32 / @88 | nano 净空误差 @32 | nano AUC@32 |
+|---|---|---|---|---|---|---|
+| 训练集·室内 | **+0.92 / +0.95** | **0.01 m** | 1.00 | +0.77 / +0.77 | 0.06 m | 0.99 |
+| held-out·室内 | +0.42 / +0.38 | 0.46 m | 0.82 | +0.37 / +0.10 | 0.41 m | 0.79 |
+| 未见房间 16–23 | +0.35 / +0.26 | 0.38 m | 0.86 | +0.31 / +0.21 | 0.38 m | 0.81 |
+| 训练集·pybullet | **+0.93 / +0.89** | **0.01 m** | 1.00 | +0.72 / +0.74 | 0.09 m | 1.00 |
+| held-out·pybullet | +0.53 / +0.44 | 0.24 m | 1.00 | +0.59 / +0.58 | 0.16 m | 0.99 |
+
+基线："复制最后一帧"的增益为 0；"净空不变"的误差 0.35–0.43 m。
+
+在自己的训练 rollout 上，size200m 几乎完美：不看新画面往前想象 88 帧（1.8 s），解码画面里蓝墙、上下铺、椅子和窗户的位置都对（图中第一行），净空误差 1 cm，解码误差比复制基线低 8–12 倍。换到同一批房子的 held-out rollout，增益掉到 +0.42，净空误差 0.46 m，不比"净空不变"好；画面条里是一间模糊、部分编造的房间。size200m 的训练 / held-out 差距是解码增益约 0.5、净空误差约 0.45 m，nano 是约 0.4 和 0.35 m。**大模型把 320 条训练 rollout 背下来了**；能泛化的部分（held-out 和未见房间）只比 nano 略好，在 held-out pybullet 上甚至更差。限制它的不是容量，而是数据。
+
+**例子大图：训练集 vs held-out vs 未见。** 每张图 8 条室内序列（上行真实画面，下行观测 8 步后的 open-loop 想象），按最近净空从很近到很远均匀抽取。"训练集" = 模型训练时用过的 rollout；"held-out" = 同一批房子里留出、不参与训练的 20% rollout（与训练用的切分相同，seed 0）；"未见" = 房 16–23，从没用过。nano C 6k 和 size200m 用同一份训练数据，所以它们的训练集和 held-out 图是同一批 rollout；所有未见房间图是同一批 8 条序列。
+
+| 模型 | 训练集 rollout（见过） | held-out rollout（同一批房子，没见过的飞行） | 未见房间 16–23 |
+|---|---|---|---|
+| nano C 6k (1.26M, hybrid C) | [训练集](src/output/report/imagination_examples_train_rooms_pb_plus_rooms6k.png) | [held-out](src/output/report/imagination_examples_heldout_rooms_pb_plus_rooms6k.png) | [未见房间](src/output/report/imagination_examples_unseen_rooms_pb_plus_rooms6k.png) |
+| size200m (157M, hybrid C) | [训练集](src/output/report/imagination_examples_train_rooms_pb_plus_rooms_size200m.png) | [held-out](src/output/report/imagination_examples_heldout_rooms_pb_plus_rooms_size200m.png) | [未见房间](src/output/report/imagination_examples_unseen_rooms_pb_plus_rooms_size200m.png) |
+| nano, 1280 indoor + overshoot | [训练集](src/output/report/imagination_examples_train_rooms_rooms1280_os.png) | [held-out](src/output/report/imagination_examples_heldout_rooms_rooms1280_os.png) | [未见房间](src/output/report/imagination_examples_unseen_rooms_rooms1280_os.png) |
+
+看点：在训练集图上，size200m 能把椅子、门、冰箱，甚至撞墙后画面变黑都想象出来；到了 held-out 和未见房间，同一个模型只剩墙、地面和大色块。
+
+### 3.6 只看 imagination（不含碰撞 / 距离头）
+
+为了单独分析想象能力，用 `--imag-only` 训练了四个世界模型：只有重建 + KL（dyn 1.0 / rep 0.1，free 1 nat），也就是不带 reward / continue 头的 DreamerV3 世界模型目标；其中两个加了 8 步 overshooting。每 500 步在三个测试集上做同样的 open-loop 想象测试（观测 8 步、再凭记忆和实际命令想象 8 步、解码）：64 条**训练集** rollout、**held-out** rollout、64 条**未见房间** 16–23 的 rollout，并保留 held-out 最好的 checkpoint。脚本：`src/plot_imagination_curves.py`。
+
+![imagination curves](src/output/report/imagination_curves.png)
+
+看法：第一行是训练损失（在训练 batch 上算），第二行是同一个想象测试在三个测试集上随训练的变化，第三行是测试集上的 posterior 重建误差和 posterior–prior KL，以及保留 checkpoint 在不同想象距离下的增益（点线 = 训练集 rollout，实线 = held-out，虚线 = 未见房间）。横轴是已训练的序列数（步数 × batch），因为 size200m 用的是 batch 32。
+
+保留 checkpoint 的 +32 帧解码增益（1 − 想象误差 / 复制最后一帧的误差）和 KL（nats）：
+
+| 实验 | 保留步数 | 训练集 rollout | held-out rollout | 未见房间 | KL 训练 / held-out / 未见 |
+|---|---|---|---|---|---|
+| nano，hybrid C，DreamerV3 损失 | 9000 | +0.82 | +0.32 | +0.14 | 8.5 / 18.5 / 21.6 |
+| nano，hybrid C，+ overshoot | 1000 | +0.37 | +0.28 | +0.22 | 7.6 / 7.7 / 7.6 |
+| size200m，hybrid C，DreamerV3 损失 | 1500 | +0.62 | +0.22 | +0.14 | 9.5 / 13.8 / 15.1 |
+| **nano，1280 条室内，+ overshoot** | 4000 | +0.57 | **+0.44** | **+0.36** | 12.8 / 12.8 / 13.0 |
+
+训练到第 10000 步时，size200m 在训练集上达到 +0.95，但 held-out 只有 +0.17、未见房间 +0.19，KL 分别是 3.5 / 54 / 63 nats。
+
+结论：
+
+1. **在训练集 rollout 上，想象会变得几乎完美，模型越大越明显**（图 d：size200m 0.95，nano 约 0.8）。这只衡量记忆。
+2. **在 held-out 和未见数据上，用 hybrid 数据时无论模型大小都停在 +0.2–0.3**（图 e、f）。size200m 在这里不比 nano 好，它在第 1500 步就到了 held-out 最好，之后只会下降。
+3. **KL 图（h）最能看出过拟合。** 在训练集上，prior 对 posterior 的预测越来越准（size200m 降到 3.5 nats）；在 held-out 和未见数据上，KL 一直在涨（size200m 54–63 nats，nano 18–22）。模型对背过的飞行越来越有把握，对新飞行越来越"吃惊"。
+4. **单加 overshoot 解决不了**（绿色）：在 320 条的 hybrid 数据上，它的 held-out 曲线平在 0.25 左右，保留的是最早的 checkpoint。
+5. **真正让测试曲线上升的是数据量**（蓝色）：用 1280 条室内 rollout，训练 / held-out / 未见三组的 KL 几乎一样（12.8 / 12.8 / 13.0），held-out 增益 +0.44、未见房间 +0.36，是所有实验里最高的；而它在训练集上的增益反而最低。点线和实线之间的差距小，就是"能泛化的想象"的样子。
+6. **最短的想象距离反而最差**（图 i）：+4 帧时在新数据上的增益接近或低于 0。原因是 83 ms 内"复制最后一帧"本身就是很强的基线，而解码会把细节画糊；想象距离越长，真实画面离最后一帧越远，增益就越大。
+
+结论：用 Dreamer 的结构，在新飞行上的想象能力受限于数据的数量和多样性，而不是模型大小或训练目标。要继续提升想象，下一步是更多房子、更长的 rollout，并用 held-out 早停。
 
 ## 4. 演示视频
 

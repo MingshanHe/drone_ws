@@ -31,6 +31,8 @@ REP = os.path.join(OUT, "report")
 EV = os.path.join(OUT, "evals")
 
 from draw_pipeline import BLUE, GRAY, GREEN, INK, INK2, MUTED, ORANGE, SURFACE  # noqa: E402
+
+PURPLE = "#8e44ad"
 from dreamer.data import STRIDE, SeqData  # noqa: E402
 from gen_wm_dataset import DANGER_R, HORIZONS  # noqa: E402
 from train_dreamer import load_dreamer  # noqa: E402
@@ -42,23 +44,26 @@ CASES = [  # key, label, checkpoint, dataset, held-out split?, colour
 ]
 EXTRA = [  # optional variants, drawn as extra curves (no strip) when their checkpoint exists
     ("rooms_unseen_1280", "unseen rooms, 1280 rollouts + overshoot (B)", "world_model_dreamer_rooms1280_os.pth", "wm_dataset_rooms_unseen60.npz", False, GREEN),
+    ("rooms_unseen_size200m", "unseen rooms, C size200m (hybrid data, 157M)", "world_model_dreamer_pb_plus_rooms_size200m.pth", "wm_dataset_rooms_unseen60.npz", False, PURPLE),
 ]
+STRIP_EXTRA = {"rooms_unseen_size200m"}  # extra variants that also get a true / imagined strip
 CONTEXT = 8
 SHOW_STEPS = [1, 2, 4, 6, 8, 12, 16, 22]  # imagined steps shown in the strips (x4 = frames)
 CONTEXTS = [1, 2, 4, 8, 12]
 
 
 @torch.no_grad()
-def run_case(key, ckpt, dataset, heldout, device):
+def run_case(key, ckpt, dataset, heldout, device, rolls=None):
     model, _ = load_dreamer(os.path.join(OUT, ckpt), device)
     blob = np.load(os.path.join(OUT, dataset))
     data = {k: blob[k] for k in blob.files}
-    rolls = _split_rollouts(data, np.random.default_rng(0))[1] if heldout else list(range(data["frames"].shape[0]))
+    if rolls is None:
+        rolls = _split_rollouts(data, np.random.default_rng(0))[1] if heldout else list(range(data["frames"].shape[0]))
     sd = SeqData(data, device)
     ep = sd.episodes(rolls)
     x, d = ep["frames"], ep["dists"]
     N, T = x.shape[:2]
-    post, _ = model.rssm.observe(model.enc(x.flatten(0, 1)).view(N, T, -1), ep["a_prev"])
+    post, _ = model.rssm.observe(model.encode(x.flatten(0, 1)).view(N, T, -1), ep["a_prev"])
     res = {"n_seq": int(N)}
 
     def imagine_from(c):
@@ -71,7 +76,7 @@ def run_case(key, ckpt, dataset, heldout, device):
     H = T - CONTEXT
     mse_p, mse_0, mae_p, mae_0 = [], [], [], []
     for h in range(H):
-        xh = model.dec(fim[:, h]).float().clamp(0, 1)
+        xh = model.decode(fim[:, h]).float().clamp(0, 1)
         xt = x[:, CONTEXT + h]
         mse_p.append(float(((xh - xt) ** 2).mean()))
         mse_0.append(float(((x[:, CONTEXT - 1] - xt) ** 2).mean()))
@@ -95,7 +100,7 @@ def run_case(key, ckpt, dataset, heldout, device):
     gains = []
     for c in CONTEXTS:
         _, f = imagine_from(c)
-        xh = model.dec(f[:, 7]).float().clamp(0, 1)
+        xh = model.decode(f[:, 7]).float().clamp(0, 1)
         xt = x[:, c + 7]
         gains.append(float(1.0 - ((xh - xt) ** 2).mean() / ((x[:, c - 1] - xt) ** 2).mean()))
     res["gain32_vs_context"] = gains
@@ -103,7 +108,7 @@ def run_case(key, ckpt, dataset, heldout, device):
     fut = d[:, CONTEXT:].min(1).values
     n = int(torch.argmin((fut - 0.5).abs()))
     _, f = imagine_from(CONTEXT)
-    xh = model.dec(f[n]).float().clamp(0, 1)
+    xh = model.decode(f[n]).float().clamp(0, 1)
     dh = model.twohot.mean(model.dist_head(f[n]))
     pc = model.p_col(f[n])[:, 0]
     strip = dict(roll=int(ep["r"][n]), ctx=x[n, CONTEXT - 1].permute(1, 2, 0).cpu().numpy(), d_ctx=float(d[n, CONTEXT - 1]),
@@ -127,18 +132,20 @@ def jepa_refs():
 def figure(results, strips, refs):
     matplotlib.rcParams["font.family"] = ["DejaVu Sans"]
     ncol = len(SHOW_STEPS) + 1
-    fig = plt.figure(figsize=(16, 13.2), facecolor=SURFACE)
-    gs = fig.add_gridspec(4, ncol, hspace=0.32, wspace=0.08, left=0.04, right=0.985, top=0.93, bottom=0.40)
-    gs2 = fig.add_gridspec(1, 4, wspace=0.34, left=0.05, right=0.985, top=0.31, bottom=0.07)
-    fig.suptitle("nano-Dreamer imagination quality: observe 8 steps (667 ms), then imagine from memory and commands only, no further images", fontsize=13, fontweight="bold", color=INK, y=0.975)
-    for ci, (key, label, _, _, _, color) in enumerate(CASES):
+    strip_cases = CASES + [c for c in EXTRA if c[0] in strips and c[0] in STRIP_EXTRA]
+    H = 13.2 + 3.5 * (len(strip_cases) - 2)
+    fig = plt.figure(figsize=(16, H), facecolor=SURFACE)
+    gs = fig.add_gridspec(2 * len(strip_cases), ncol, hspace=0.32, wspace=0.08, left=0.04, right=0.985, top=1 - 0.92 / H, bottom=5.6 / H)
+    gs2 = fig.add_gridspec(1, 4, wspace=0.34, left=0.05, right=0.985, top=4.4 / H, bottom=1.25 / H)
+    fig.suptitle("Dreamer imagination quality: observe 8 steps (667 ms), then imagine from memory and commands only, no further images", fontsize=13, fontweight="bold", color=INK, y=1 - 0.33 / H)
+    for ci, (key, label, _, _, _, color) in enumerate(strip_cases):
         st = strips[key]
         for row, (imgs, ds, name) in enumerate(((st["true"], st["d_true"], "true"), (st["imag"], st["d_imag"], "imagined"))):
             r = 2 * ci + row
             ax = fig.add_subplot(gs[r, 0])
             ax.imshow(st["ctx"] if row == 0 else st["ctx"], interpolation="nearest")
             ax.set_title(f"last observed  d={st['d_ctx']:.2f}" if row == 0 else "(same frame)", fontsize=7.5, color=INK2 if row == 0 else MUTED)
-            ax.set_ylabel(f"{label.split(' (')[0]}\n{name}", fontsize=8.5, color=color if row == 1 else INK2, fontweight="bold" if row == 1 else "normal")
+            ax.set_ylabel(f"{label.split(' (')[0]}\n{label.split(' (')[1].split(',')[0].rstrip(')') if ' (' in label else ''}\n{name}", fontsize=8.5, color=color if row == 1 else INK2, fontweight="bold" if row == 1 else "normal")
             ax.set_xticks([]), ax.set_yticks([])
             for sp in ax.spines.values():
                 sp.set_edgecolor(INK2), sp.set_linewidth(0.6)
@@ -187,8 +194,10 @@ def figure(results, strips, refs):
     n = ", ".join(f"{label.split(' (')[0]}: {results[key]['n_seq']} sequences" for key, label, *_ in CASES)
     if any(c[0] in results for c in EXTRA):
         n += "; green = indoor model trained for imagination: 1280 rollouts (5×) + 8-step overshooting, same 1.26M parameters"
-    fig.text(0.04, 0.022, f"Curves average every held-out / unseen sequence ({n}; 4 phases per rollout).", fontsize=7.8, color=MUTED)
-    fig.text(0.04, 0.006, "Strips: one sequence each whose closest approach is ≈ 0.5 m. Imagination sees no new image; the commands are the ones actually flown.", fontsize=7.8, color=MUTED)
+    if "rooms_unseen_size200m" in results:
+        n += ";\npurple = DreamerV3 size200m preset (157M parameters) trained on the same hybrid data as orange (C: 64 pybullet + 256 indoor rollouts), best held-out checkpoint"
+    fig.text(0.04, 0.34 / H, f"Curves average every held-out / unseen sequence ({n}; 4 phases per rollout).", fontsize=7.8, color=MUTED)
+    fig.text(0.04, 0.12 / H, "Strips: one sequence each whose closest approach is ≈ 0.5 m. Imagination sees no new image; the commands are the ones actually flown.", fontsize=7.8, color=MUTED)
     path = os.path.join(REP, "imagination_eval.png")
     fig.savefig(path, dpi=140, facecolor=SURFACE)
     plt.close(fig)

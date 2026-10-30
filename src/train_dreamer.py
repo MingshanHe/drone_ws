@@ -43,10 +43,13 @@ from train_world_model import _augment, _split_rollouts, roc_auc  # noqa: E402
 
 OUT = os.path.join(HERE, "output")
 REP = os.path.join(OUT, "report")
+EV_DIR = os.path.join(OUT, "evals")
 CFG = dict(deter=256, stoch=16, classes=16, hidden=128, depth=16, units=128, unimix=0.01, free=1.0, bins=64, d_max=4.0)
 SIZES = {  # PLAN_dreamerv3.md: nano is the report's model; wide is for the visually richer indoor data
     "nano": dict(CFG),
     "wide": dict(CFG, deter=512, stoch=32, classes=32, hidden=256, depth=32, units=256),
+    # DreamerV3 configs.yaml size200m: deter 8192, hidden 1024, 32 x 64 latents, depth 64, mults [2,3,4,4], units 1024, blocks 8
+    "size200m": dict(CFG, deter=8192, stoch=32, classes=64, hidden=1024, depth=64, units=1024, blocks=8, mults=[2, 3, 4, 4], bins=255),
 }
 SCALES = dict(rec=1.0, dist=1.0, col=1.0, cont=1.0, dyn=1.0, rep=0.1, cf=1.0)
 MODEL_STEPS = [int(k) // STRIDE for k in HORIZONS]  # 1, 2, 4, 8 model steps = +4/8/16/32 frames
@@ -59,15 +62,22 @@ CANDS = torch.tensor(ACTION_VECS / A_NORM, dtype=torch.float32)  # (6, 4) normal
 class Dreamer(nn.Module):
     def __init__(self, cfg: dict = CFG, action_dim: int = 4):
         super().__init__()
-        self.cfg = dict(CFG, **cfg)
-        self.enc = ConvEncoder(cfg["depth"])
-        self.rssm = RSSM(self.enc.out_dim, action_dim, cfg["deter"], cfg["stoch"], cfg["classes"], cfg["hidden"], cfg["unimix"], cfg["free"])
+        self.cfg = cfg = dict(CFG, **cfg)
+        self.enc = ConvEncoder(cfg["depth"], cfg.get("mults"))
+        self.rssm = RSSM(self.enc.out_dim, action_dim, cfg["deter"], cfg["stoch"], cfg["classes"], cfg["hidden"], cfg["unimix"], cfg["free"], cfg.get("blocks", 1))
         fd = self.rssm.feat_dim
-        self.dec = ConvDecoder(fd, cfg["depth"])
+        self.dec = ConvDecoder(fd, cfg["depth"], cfg.get("mults"))
         self.dist_head = MLP(fd, cfg["units"], 2, cfg["bins"])
         self.twohot = TwoHot(0.0, cfg["d_max"], cfg["bins"])
         self.col_head = MLP(fd, cfg["units"], 1, len(RADII))
         self.cont_head = MLP(fd, cfg["units"], 1, 1)
+
+    def encode(self, x: torch.Tensor, chunk: int = 512) -> torch.Tensor:
+        """Encoder over a large flat batch in chunks (the size200m encoder would not fit a whole episode set)."""
+        return torch.cat([self.enc(x[i : i + chunk]) for i in range(0, len(x), chunk)])
+
+    def decode(self, feat: torch.Tensor, chunk: int = 512) -> torch.Tensor:
+        return torch.cat([self.dec(feat[i : i + chunk]) for i in range(0, len(feat), chunk)])
 
     def p_col(self, feat: torch.Tensor) -> torch.Tensor:
         return torch.sigmoid(self.col_head(feat).float())
@@ -90,7 +100,7 @@ class Dreamer(nn.Module):
         return self.within(p_now, p_steps).view(N, A, len(MODEL_STEPS), len(RADII))
 
 
-def overshoot_losses(model: Dreamer, batch: dict, post: dict, K: int) -> dict:
+def overshoot_losses(model: Dreamer, batch: dict, post: dict, K: int, imag_only: bool = False) -> dict:
     """Imagination-focused training (PlaNet-style latent overshooting, not in DreamerV3): from posterior
     states at random steps, roll the prior K steps under the flown commands and ask the imagined states
     to (a) decode to the true future frames, (b) match the posterior reached there (KL, dyn-style),
@@ -109,13 +119,15 @@ def overshoot_losses(model: Dreamer, batch: dict, post: dict, K: int) -> dict:
     post_p = cat_probs(post["logits"][bk, fut].flatten(0, 1).detach(), model.rssm.unimix)
     prior_p = cat_probs(im["logits"].flatten(0, 1), model.rssm.unimix)
     kl = cat_kl(post_p, prior_p).clamp_min(model.rssm.free).mean()
+    if imag_only:
+        return dict(os_rec=rec, os_kl=kl)
     dt = d[bk, fut].flatten()
     dist = model.twohot.loss(model.dist_head(fim), dt).mean()
     col = F.binary_cross_entropy_with_logits(model.col_head(fim).float(), torch.stack([(dt < r).float() for r in RADII], -1))
     return dict(os_rec=rec, os_kl=kl, os_dist=dist, os_col=col)
 
 
-def losses(model: Dreamer, batch: dict, robust: bool, cf_all: bool = False, overshoot: int = 0) -> tuple:
+def losses(model: Dreamer, batch: dict, robust: bool, cf_all: bool = False, overshoot: int = 0, imag_only: bool = False) -> tuple:
     x = batch["frames"]
     B, T = x.shape[:2]
     flat_x = x.flatten(0, 1)
@@ -124,6 +136,12 @@ def losses(model: Dreamer, batch: dict, robust: bool, cf_all: bool = False, over
     feat = model.rssm.feat(post).flatten(0, 1)
     d = batch["dists"].flatten()
     rec = ((model.dec(feat).float() - flat_x) ** 2).sum((1, 2, 3)).mean()
+    if imag_only:  # world model only, as DreamerV3 without reward / continue heads
+        dyn, rep = model.rssm.kl(post["logits"], prior["logits"])
+        out = dict(rec=rec, dyn=dyn, rep=rep)
+        if overshoot > 0:
+            out.update(overshoot_losses(model, batch, post, overshoot, imag_only=True))
+        return out, post
     dist = model.twohot.loss(model.dist_head(feat), d).mean()
     col_lab = torch.stack([(d < r).float() for r in RADII], -1)
     col = F.binary_cross_entropy_with_logits(model.col_head(feat).float(), col_lab)
@@ -145,13 +163,51 @@ def losses(model: Dreamer, batch: dict, robust: bool, cf_all: bool = False, over
     return out, post
 
 
+IMAG_KS = (1, 2, 4, 8)  # imagined model steps scored (= +4 / +8 / +16 / +32 frames)
+
+
+@torch.no_grad()
+def evaluate_imagination(model: Dreamer, data: SeqData, rolls, phases=(0, 2)) -> dict:
+    """Imagination-only test: posterior reconstruction error, KL between posterior and prior per step
+    (how much the image surprises the model), and open-loop decoded error after 8 observed steps vs the
+    copy-last-frame baseline at +4/+8/+16/+32 frames (hand-offs at model steps 8/12/16/20 pooled)."""
+    was = model.training
+    model.eval()
+    ep = data.episodes(rolls, phases=phases)
+    x = ep["frames"]
+    N, T = x.shape[:2]
+    post, prior = model.rssm.observe(model.encode(x.flatten(0, 1)).view(N, T, -1), ep["a_prev"])
+    feat = model.rssm.feat(post).flatten(0, 1)
+    recon = float(((model.decode(feat).float().clamp(0, 1) - x.flatten(0, 1)) ** 2).mean())
+    kl = float(cat_kl(cat_probs(post["logits"], model.rssm.unimix), cat_probs(prior["logits"], model.rssm.unimix))[:, 1:].mean())
+    mp, mc = {j: [] for j in IMAG_KS}, {j: [] for j in IMAG_KS}
+    for t0 in (8, 12, 16, 20):
+        if t0 + IMAG_KS[-1] > T - 1:
+            continue
+        st = model.rssm.index(post, slice(None), t0)
+        fim = model.rssm.feat(model.rssm.imagine(st, ep["actions"][:, t0 : t0 + IMAG_KS[-1]]))
+        for j in IMAG_KS:
+            xt = x[:, t0 + j]
+            mp[j].append(((model.decode(fim[:, j - 1]).float().clamp(0, 1) - xt) ** 2).mean((1, 2, 3)))
+            mc[j].append(((x[:, t0] - xt) ** 2).mean((1, 2, 3)))
+    mse = {STRIDE * j: float(torch.cat(mp[j]).mean()) for j in IMAG_KS}
+    copy = {STRIDE * j: float(torch.cat(mc[j]).mean()) for j in IMAG_KS}
+    model.train(was)
+    return dict(n_seq=int(N), recon=recon, kl=kl, mse=mse, copy=copy, gain={k: 1.0 - mse[k] / copy[k] for k in mse})
+
+
+def fmt_imag(m: dict) -> str:
+    return (f"recon {m['recon']:.4f}  KL {m['kl']:.2f}  imagined MSE@4/8/16/32 " + "/".join(f"{m['mse'][k]:.4f}" for k in m["mse"])
+            + "  gain@4/8/16/32 " + "/".join(f"{m['gain'][k]:+.2f}" for k in m["gain"]))
+
+
 @torch.no_grad()
 def evaluate(model: Dreamer, data: SeqData, rolls, fig_path: str | None = None, title: str = "") -> dict:
     model.eval()
     ep = data.episodes(rolls)
     x = ep["frames"]
     N, T = x.shape[:2]
-    embed = model.enc(x.flatten(0, 1)).view(N, T, -1)
+    embed = model.encode(x.flatten(0, 1)).view(N, T, -1)
     post, _ = model.rssm.observe(embed, ep["a_prev"])
     feat = model.rssm.feat(post)
     d = ep["dists"]
@@ -259,11 +315,31 @@ def train(data_dict: dict, args, device: str) -> tuple:
     use_amp = device == "cuda"
     tr_rolls_np = np.array(tr_rolls)
     hist, t0, agg = [], time.perf_counter(), {}
+    best = [-1e9, 0, None]
+    imag_only = getattr(args, "imag_only", False)
+    # imagination test sets: 64 fixed training rollouts, the held-out rollouts, optionally unseen houses
+    tr_probe = sorted(np.random.default_rng(1).choice(tr_rolls, min(64, len(tr_rolls)), replace=False).tolist())
+    unseen = None
+    if getattr(args, "unseen", None):
+        ub = np.load(args.unseen)
+        unseen = SeqData({k: ub[k] for k in ub.files}, device)
+        unseen_rolls = list(range(min(64, unseen.R)))
+    imag_hist = []
+
+    def imag_test(step):
+        row = {"step": step, "train": evaluate_imagination(model, data, tr_probe), "held_out": evaluate_imagination(model, data, va_rolls)}
+        if unseen is not None:
+            row["unseen"] = evaluate_imagination(model, unseen, unseen_rolls)
+        imag_hist.append(row)
+        for k in ("train", "held_out", "unseen"):
+            if k in row:
+                print(f"[IMAG {step:6d}] {k:8s} " + fmt_imag(row[k]), flush=True)
+        return row
     model.train()
     for step in range(1, args.steps + 1):
         batch = data.sample(tr_rolls_np, args.batch, args.length, rng)
         with torch.autocast("cuda", dtype=torch.bfloat16, enabled=use_amp):
-            parts, _ = losses(model, batch, args.robust, getattr(args, "cf_all", False), getattr(args, "overshoot", 0))
+            parts, _ = losses(model, batch, args.robust, getattr(args, "cf_all", False), getattr(args, "overshoot", 0), getattr(args, "imag_only", False))
         os_scale = getattr(args, "overshoot_scale", 1.0)
         loss = sum((SCALES[k] if k in SCALES else os_scale) * v for k, v in parts.items())
         opt.zero_grad(set_to_none=True)
@@ -278,19 +354,50 @@ def train(data_dict: dict, args, device: str) -> tuple:
             n = args.log_every if step % args.log_every == 0 else step % args.log_every
             print(f"[{step:6d}] " + " ".join(f"{k}={v / n:.3f}" for k, v in agg.items()) + f"  ({(time.perf_counter() - t0) / step * 1e3:.0f} ms/step)", flush=True)
             agg = {}
-        if step % args.eval_every == 0 and step < args.steps:
+        if getattr(args, "imag_eval_every", 0) and (step % args.imag_eval_every == 0 or step == 1):
+            row = imag_test(step)
+            if imag_only and getattr(args, "keep_best", False) and row["held_out"]["gain"][32] > best[0]:
+                best[:] = [row["held_out"]["gain"][32], step, {k: v.detach().clone() for k, v in model.state_dict().items()}]
+        if not imag_only and step % args.eval_every == 0 and step < args.steps:
             m = evaluate(model, data, va_rolls)
             hist.append((step, m))
             print(f"[EVAL {step:6d}] " + fmt(m), flush=True)
-            if getattr(args, "out", None):  # keep a usable checkpoint while a long run is still going
+            sc = m["auc"][32] + m["gain"][32]
+            if getattr(args, "keep_best", False) and sc > best[0]:  # held-out early stopping
+                best[:] = [sc, step, {k: v.detach().clone() for k, v in model.state_dict().items()}]
+                print(f"[BEST {step:6d}] AUC@32 + gain@32 = {sc:.3f}", flush=True)
+            if getattr(args, "out", None) and not getattr(args, "keep_best", False):  # keep a usable checkpoint while a long run is still going
                 torch.save({"model": model.state_dict(), "meta": {"version": 3, "family": "dreamer", "cfg": dict(cfg), "partial_step": step, "stride": STRIDE,
                                                                   "horizons": [int(k) for k in HORIZONS], "model_steps": MODEL_STEPS, "radii": [float(r) for r in RADII],
                                                                   "danger_r": float(DANGER_R), "a_norm": [float(v) for v in A_NORM], "action_names": list(ACTION_NAMES),
                                                                   "action_vecs": [[float(v) for v in row] for row in ACTION_VECS], "fov_deg": float(data_dict.get("fov_deg", 60.0)),
                                                                   "source": str(data_dict.get("source", "pybullet")), "n_params": int(n_params)}}, args.out + ".partial")
     fig = os.path.join(REP, f"dreamer_openloop_{args.tag}.png") if args.tag else None
-    m = evaluate(model, data, va_rolls, fig_path=fig, title=f"nano-Dreamer [{args.tag}]")
+    if imag_only:  # no heads trained: report imagination only, keep the best held-out gain@32
+        last = imag_hist[-1] if imag_hist and imag_hist[-1]["step"] == args.steps else imag_test(args.steps)
+        kept = args.steps
+        if getattr(args, "keep_best", False) and best[2] is not None and best[0] > last["held_out"]["gain"][32]:
+            model.load_state_dict(best[2])
+            kept = best[1]
+            print(f"[INFO] keep-best: restoring step {kept} (held-out gain@32 {best[0]:+.3f})", flush=True)
+        json.dump({"tag": args.tag, "size": getattr(args, "size", "nano"), "batch": args.batch, "overshoot": int(getattr(args, "overshoot", 0)),
+                   "kept_step": kept, "history": imag_hist}, open(os.path.join(EV_DIR, f"dreamer_{args.tag}_imag.json"), "w"), indent=1)
+        m = evaluate_imagination(model, data, va_rolls)
+        ckpt = {"model": model.state_dict(), "meta": {
+            "version": 3, "family": "dreamer", "imag_only": True, "cfg": dict(cfg), "size": getattr(args, "size", "nano"), "stride": STRIDE,
+            "horizons": [int(k) for k in HORIZONS], "model_steps": MODEL_STEPS, "radii": [float(r) for r in RADII], "danger_r": float(DANGER_R),
+            "a_norm": [float(v) for v in A_NORM], "action_names": list(ACTION_NAMES), "action_vecs": [[float(v) for v in row] for row in ACTION_VECS],
+            "fov_deg": float(data_dict.get("fov_deg", 60.0)), "source": str(data_dict.get("source", "pybullet")), "n_params": int(n_params),
+            "steps": int(args.steps), "kept_step": int(kept), "overshoot": int(getattr(args, "overshoot", 0))}}
+        return ckpt, m, None
+    m = evaluate(model, data, va_rolls)
     hist.append((args.steps, m))
+    kept = args.steps
+    if getattr(args, "keep_best", False) and best[2] is not None and best[0] > m["auc"][32] + m["gain"][32]:
+        model.load_state_dict(best[2])
+        kept = best[1]
+        print(f"[INFO] keep-best: restoring step {kept} (AUC@32 + gain@32 {best[0]:.3f})", flush=True)
+    m = evaluate(model, data, va_rolls, fig_path=fig, title=f"Dreamer {getattr(args, 'size', 'nano')} [{args.tag}]")
     ckpt = {
         "model": model.state_dict(),
         "meta": {
@@ -299,7 +406,7 @@ def train(data_dict: dict, args, device: str) -> tuple:
             "danger_r": float(DANGER_R), "a_norm": [float(v) for v in A_NORM], "action_names": list(ACTION_NAMES),
             "action_vecs": [[float(v) for v in row] for row in ACTION_VECS],
             "fov_deg": float(data_dict.get("fov_deg", 60.0)), "source": str(data_dict.get("source", "pybullet")),
-            "n_params": int(n_params), "steps": int(args.steps), "robust": bool(args.robust), "cf_all": bool(getattr(args, "cf_all", False)),
+            "n_params": int(n_params), "steps": int(args.steps), "kept_step": int(kept), "robust": bool(args.robust), "cf_all": bool(getattr(args, "cf_all", False)),
             "overshoot": int(getattr(args, "overshoot", 0)), "overshoot_scale": float(getattr(args, "overshoot_scale", 1.0)), "history": hist,
         },
     }
@@ -362,6 +469,10 @@ def main() -> None:
     ap.add_argument("--robust", action="store_true", help="Lesson-20 appearance augmentation on the encoder input")
     ap.add_argument("--cf-all", action="store_true", help="counterfactual loss on every (frame, command), also when the threat is outside the current FOV (memory-aware)")
     ap.add_argument("--size", choices=list(SIZES), default="nano")
+    ap.add_argument("--imag-only", action="store_true", help="world model only: reconstruction + KL (+ overshoot), no collision / distance / continue / counterfactual heads")
+    ap.add_argument("--imag-eval-every", type=int, default=0, help="imagination test (train / held-out / unseen) every N steps")
+    ap.add_argument("--unseen", default=None, help="dataset of unseen houses for the imagination test")
+    ap.add_argument("--keep-best", action="store_true", help="save the weights of the best held-out eval (AUC@32 + gain@32), not the last")
     ap.add_argument("--overshoot", type=int, default=0, help="imagination-focused training: K-step latent/pixel overshooting from random posterior states (0 = off)")
     ap.add_argument("--overshoot-scale", type=float, default=1.0)
     ap.add_argument("--selftest", action="store_true")
@@ -382,6 +493,9 @@ def main() -> None:
         return
     ckpt, m, fig = train(data, args, device)
     torch.save(ckpt, args.out)
+    if ckpt["meta"].get("imag_only"):
+        print(f"DREAMER-IMAG OK [{args.tag}]: {args.steps} steps (kept {ckpt['meta']['kept_step']}), held-out " + fmt_imag(m) + f", params={ckpt['meta']['n_params']/1e6:.2f}M, saved {args.out}")
+        return
     print(f"DREAMER OK [{args.tag}]: {args.steps} steps, " + fmt(m) + f", params={ckpt['meta']['n_params']/1e6:.2f}M, saved {args.out}" + (f", figure {fig}" if fig else ""))
 
 

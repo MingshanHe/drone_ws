@@ -159,7 +159,78 @@ Conclusion: **the bottleneck is data and the training objective, not capacity.**
 
 ![unseen houses, 1280 + overshoot](src/output/report/imagination_examples_rooms_unseen_1280os.png)
 
-Compare with [the same 8 sequences for the old C 6k model](src/output/report/imagination_examples_rooms_unseen_C6k.png) (and [held-out training-house examples](src/output/report/imagination_examples_rooms_heldout_1280os.png)). The imagination is still blurry: the colour blocks and positions of walls, floor and large furniture match, while texture and small objects are lost; but P(< 0.7) rises at the right time when the view darkens towards a wall. Reaching DreamerV3's sharpness needs more data (more houses, not just more seeds in the same houses), attitude as an input, and only then a bigger model.
+Compare with [the same 8 sequences for the old C 6k model](src/output/report/imagination_examples_rooms_unseen_C6k.png) (and [held-out rollouts of its own 1280-rollout training data](src/output/report/imagination_examples_rooms_heldout_1280os.png)). The imagination is still blurry: the colour blocks and positions of walls, floor and large furniture match, while texture and small objects are lost; but P(< 0.7) rises at the right time when the view darkens towards a wall. Reaching DreamerV3's sharpness needs more data (more houses, not just more seeds in the same houses), attitude as an input, and only then a bigger model.
+
+**DreamerV3 size200m on the hybrid data.** The same hybrid dataset as model C (64 pybullet + 256 indoor rollouts) was used to train the DreamerV3 size200m preset (deter 8192, 32 × 64 latents, CNN depth 64 with mults [2, 3, 4, 4], MLP units 1024, block-diagonal GRU with 8 blocks, 255 two-hot bins; 157M parameters here, because there is no actor / critic). Training: batch 32 × 24 steps (the largest batch that fits the 16 GB GPU; batch 64 spilled into system memory and ran 14× slower), Adam 1e-4, 10k steps, 0.39 s per step (≈ 70 min), held-out evaluation every 1k steps; the best held-out checkpoint (step 5000) is kept. It is the purple strip and curves in the figure of section 3.4; its examples on the same 8 unseen-house sequences: [unseen houses, size200m](src/output/report/imagination_examples_rooms_unseen_size200m.png) (compare [nano C 6k](src/output/report/imagination_examples_rooms_unseen_C6k.png)), and [held-out rollouts of its own training data](src/output/report/imagination_examples_rooms_heldout_size200m.png). Training curves (purple) are in the [loss plot](src/output/report/dreamer_losses.png).
+
+| Hybrid data (C) | nano 6k (1.26M) | size200m (157M) | nano, 1280 indoor rollouts + overshoot (reference) |
+|---|---|---|---|
+| Held-out C: open-loop AUC@32 | 0.83 | **0.87** | — |
+| Held-out C: decoded gain @8 / @32 | +0.18 / +0.14 | +0.19 / **+0.25** | — |
+| Held-out C: veer ranking | 0.82 | **0.85** | — |
+| Unseen houses: open-loop AUC @4 / @32 | 0.85 / 0.81 | 0.87 / 0.86 | **0.89 / 0.87** |
+| Unseen houses: decoded MSE at +32 frames (copy 0.069) | 0.047 | 0.046 | **0.032** |
+| Unseen houses: decoded MSE at +88 frames (copy 0.140) | 0.113 | 0.107 | **0.085** |
+| Unseen houses: clearance error at +32 frames (baseline 0.37 m) | 0.40 m | 0.36 m | **0.28 m** |
+| Unseen houses: gain @+32 after 1 / 4 observed steps | −0.16 / +0.53 | −0.02 / +0.58 | **+0.25 / +0.71** |
+
+Reading: 125× more parameters on the same 320 rollouts gives a small but consistent improvement (collision foresight +0.05 AUC in unseen houses, held-out decoded gain @32 from 0.14 to 0.25), and the imagination has sharper texture: the strip shows window frames and edges. It also hallucinates them (a window that is not in the true frames), and on decoded error in unseen houses it barely beats the nano model. The nano model with 5× indoor data and overshooting stays clearly ahead on every unseen-house metric. Held-out quality peaks at step 5000 and declines afterwards while training reconstruction keeps falling, so the big model over-fits the 320 rollouts. This confirms the conclusion above: **with this data, more data and a multi-step objective help more than DreamerV3-scale capacity.**
+
+**Train vs held-out vs unseen (memorisation check).** `src/eval_train_gap.py` scores the same open-loop imagination on the rollouts each hybrid-data model was trained on, on C's held-out rollouts, and on unseen houses ([figure](src/output/report/train_gap.png)).
+
+![train vs held-out vs unseen](src/output/report/train_gap.png)
+
+| Group (hybrid data C split) | size200m gain @32 / @88 | size200m clearance error @32 | size200m AUC@32 | nano C 6k gain @32 / @88 | nano clearance error @32 | nano AUC@32 |
+|---|---|---|---|---|---|---|
+| train rooms | **+0.92 / +0.95** | **0.01 m** | 1.00 | +0.77 / +0.77 | 0.06 m | 0.99 |
+| held-out rooms | +0.42 / +0.38 | 0.46 m | 0.82 | +0.37 / +0.10 | 0.41 m | 0.79 |
+| unseen rooms 16–23 | +0.35 / +0.26 | 0.38 m | 0.86 | +0.31 / +0.21 | 0.38 m | 0.81 |
+| train pybullet | **+0.93 / +0.89** | **0.01 m** | 1.00 | +0.72 / +0.74 | 0.09 m | 1.00 |
+| held-out pybullet | +0.53 / +0.44 | 0.24 m | 1.00 | +0.59 / +0.58 | 0.16 m | 0.99 |
+
+Baselines: "copy the last frame" = gain 0; "clearance unchanged" = 0.35–0.43 m.
+
+On its own training rollouts size200m imagines almost perfectly: 88 frames (1.8 s) ahead with no new image, the decoded frames keep the blue walls, the bunk bed, the chair and the window in the right places (top strip), the clearance error is 1 cm and the decoded error is 8–12× below the copy baseline. On held-out rollouts of the same houses the gain drops to +0.42 and the clearance error to 0.46 m, no better than "clearance unchanged"; the strip shows a blurred, partly invented room. The train / held-out gap is about 0.5 in decoded gain and 0.45 m in clearance for size200m, versus 0.4 and 0.35 m for nano. **The big model has memorised the 320 training rollouts**; what generalises (held-out and unseen) is only slightly better than the nano model, and on held-out pybullet it is worse. Its capacity is not the limit; the data is.
+
+**Example pages: training vs held-out vs unseen.** Each page shows 8 room sequences (true frames on top, open-loop imagination below, after 8 observed steps), spread from close approaches to open space. "Training" = rollouts the model was trained on; "held-out" = the 20% of rollouts of the same houses kept out of training (same split as training, seed 0); "unseen" = houses 16–23, never used. nano C 6k and size200m share the same training data, so their training and held-out pages show the same rollouts; all unseen pages show the same 8 sequences.
+
+| Model | training rollouts (seen) | held-out rollouts (same houses, unseen flights) | unseen houses 16–23 |
+|---|---|---|---|
+| nano C 6k (1.26M, hybrid C) | [training](src/output/report/imagination_examples_train_rooms_pb_plus_rooms6k.png) | [held-out](src/output/report/imagination_examples_heldout_rooms_pb_plus_rooms6k.png) | [unseen](src/output/report/imagination_examples_unseen_rooms_pb_plus_rooms6k.png) |
+| size200m (157M, hybrid C) | [training](src/output/report/imagination_examples_train_rooms_pb_plus_rooms_size200m.png) | [held-out](src/output/report/imagination_examples_heldout_rooms_pb_plus_rooms_size200m.png) | [unseen](src/output/report/imagination_examples_unseen_rooms_pb_plus_rooms_size200m.png) |
+| nano, 1280 indoor + overshoot | [training](src/output/report/imagination_examples_train_rooms_rooms1280_os.png) | [held-out](src/output/report/imagination_examples_heldout_rooms_rooms1280_os.png) | [unseen](src/output/report/imagination_examples_unseen_rooms_rooms1280_os.png) |
+
+What to look for: on the training page size200m redraws the chairs, doors, fridge and even the black frame after hitting a wall; on held-out and unseen pages the same model only keeps walls, floor and large colour blocks.
+
+### 3.6 Imagination only (no collision / distance heads)
+
+To study imagination by itself, four world models were trained with `--imag-only`: only reconstruction + KL (dyn 1.0 / rep 0.1, free 1 nat), i.e. the DreamerV3 world-model objective without reward / continue heads; two of them add 8-step overshooting. Every 500 steps the open-loop imagination (observe 8 steps, imagine 8 steps from memory and the flown commands, decode) is tested on 64 **training** rollouts, on the **held-out** rollouts and on 64 rollouts of **unseen** houses 16–23. The held-out-best checkpoint is kept. Script: `src/plot_imagination_curves.py`.
+
+![imagination curves](src/output/report/imagination_curves.png)
+
+How to read it: row 1 is the training loss (on training batches), row 2 is the same imagination test on the three sets over training, row 3 shows posterior reconstruction and posterior–prior KL on the test sets, and the gain over the horizon for the kept checkpoint (dotted = training rollouts, solid = held-out, dashed = unseen). The x axis is sequences seen (steps × batch), because size200m uses batch 32.
+
+Decoded gain at +32 frames (1 − MSE imagined / MSE copy-last-frame) and KL (nats) at the kept checkpoint:
+
+| Run | Kept step | Training rollouts | Held-out rollouts | Unseen houses | KL train / held-out / unseen |
+|---|---|---|---|---|---|
+| nano, hybrid C, DreamerV3 loss | 9000 | +0.82 | +0.32 | +0.14 | 8.5 / 18.5 / 21.6 |
+| nano, hybrid C, + overshoot | 1000 | +0.37 | +0.28 | +0.22 | 7.6 / 7.7 / 7.6 |
+| size200m, hybrid C, DreamerV3 loss | 1500 | +0.62 | +0.22 | +0.14 | 9.5 / 13.8 / 15.1 |
+| **nano, 1280 indoor, + overshoot** | 4000 | +0.57 | **+0.44** | **+0.36** | 12.8 / 12.8 / 13.0 |
+
+At the end of training (step 10000), size200m reaches +0.95 on training rollouts but +0.17 held-out and +0.19 unseen, with KL 3.5 / 54 / 63 nats.
+
+Findings:
+
+1. **On training rollouts imagination becomes almost perfect, and the bigger the model the more so** (panel d: size200m 0.95, nano 0.8). This only measures memorisation.
+2. **On held-out and unseen data imagination plateaus at +0.2–0.3 with the hybrid data, whatever the model** (panels e, f). size200m is not better than nano there; its best held-out point is at 1500 steps and it only declines afterwards.
+3. **The KL panel (h) shows the over-fitting most clearly.** On training rollouts the prior predicts the posterior better and better (size200m: 3.5 nats); on held-out and unseen rollouts the KL keeps growing (size200m: 54–63 nats; nano: 18–22). The model becomes more confident about memorised flights and more surprised by new ones.
+4. **Overshooting alone does not fix it** (green): on the 320-rollout hybrid data its held-out curve is flat at about 0.25 and the kept checkpoint is the earliest one.
+5. **More data is what moves the test curves** (blue): with 1280 indoor rollouts the train / held-out / unseen KL stay together (12.8 / 12.8 / 13.0), held-out gain reaches +0.44 and unseen +0.36, the highest of all runs, while its training-rollout gain is the lowest. A small gap between the dotted and solid curves is what generalising imagination looks like.
+6. **Imagination is worst at the shortest horizon** (panel i): at +4 frames the gain is near or below 0 on new data, because copying the last frame is a strong baseline over 83 ms, while the decoder blurs details; the gain grows with the horizon as the true frames drift away from the last one.
+
+Conclusion: with Dreamer's architecture, imagination on new flights is limited by the amount and diversity of data, not by model size or the training objective. The next step for imagination is more houses and longer rollouts, with held-out early stopping.
 
 ## 4. Demo videos
 
@@ -211,7 +282,11 @@ python src/train_dreamer.py --data src/output/wm_dataset_rooms_train60_1280.npz 
 python src/eval_offline.py --models dreamer_pybullet dreamer_rooms dreamer_pb_plus_rooms --domains pybullet rand_pillars rooms_train rooms_unseen --out dreamer_three
 python src/eval_world_model_policy.py --seeds 300 --model src/output/world_model_dreamer_pybullet.pth        # conda env drone_python
 python src/hd_closed_loop.py --scene rooms --houses 8 --house-first 16 --seeds 300 --sweep-seeds 0 --model src/output/world_model_dreamer_pybullet.pth [--allow-stop]
+python src/train_dreamer.py --data src/output/wm_dataset_pb_plus_rooms.npz --out src/output/world_model_dreamer_pb_plus_rooms_size200m.pth --tag pb_plus_rooms_size200m --size size200m --batch 32 --steps 10000 --eval-every 1000 --lr 1e-4 --keep-best
 python src/eval_imagination.py
+python src/eval_train_gap.py
+python src/train_dreamer.py --data src/output/wm_dataset_pb_plus_rooms.npz --out src/output/world_model_dreamer_imag_C_nano.pth --tag imag_C_nano --imag-only --steps 10000 --imag-eval-every 500 --unseen src/output/wm_dataset_rooms_unseen60.npz --keep-best   # add --overshoot 8 / --size size200m --batch 32 for the other runs
+python src/plot_imagination_curves.py
 python src/plot_dreamer_losses.py --tags pybullet rooms rooms6k rooms_wide rooms_wide_os rooms1280_os
 python src/imagination_examples.py --model src/output/world_model_dreamer_rooms1280_os.pth --data src/output/wm_dataset_rooms_unseen60.npz --all-rollouts --tag rooms_unseen_1280os --n 8
 python src/draw_dreamer_pipeline.py

@@ -47,9 +47,9 @@ class ChanLayerNorm(nn.Module):
 class ConvEncoder(nn.Module):
     """64x64x3 -> 4x4x(4*depth) -> flat embed. Kernel 4 stride 2, four stages."""
 
-    def __init__(self, depth: int = 16):
+    def __init__(self, depth: int = 16, mults=None):
         super().__init__()
-        chans = [depth, 2 * depth, 4 * depth, 4 * depth]
+        chans = [depth * m for m in mults] if mults else [depth, 2 * depth, 4 * depth, 4 * depth]
         layers, c_in = [], 3
         for c in chans:
             layers += [nn.Conv2d(c_in, c, 4, 2, 1), ChanLayerNorm(c), nn.SiLU()]
@@ -64,11 +64,15 @@ class ConvEncoder(nn.Module):
 class ConvDecoder(nn.Module):
     """feat -> 4x4x(2*depth) -> 64x64x3 through four transposed convs (last one linear)."""
 
-    def __init__(self, feat_dim: int, depth: int = 16):
+    def __init__(self, feat_dim: int, depth: int = 16, mults=None):
         super().__init__()
-        self.c0 = 2 * depth
+        if mults:  # DreamerV3 layout: 4x4x(depth*mults[-1]) -> mirrored channels -> 3
+            self.c0 = depth * mults[-1]
+            chans = [depth * m for m in reversed(mults[:-1])] + [3]
+        else:
+            self.c0 = 2 * depth
+            chans = [4 * depth, 2 * depth, depth, 3]
         self.lin = nn.Linear(feat_dim, self.c0 * 16)
-        chans = [4 * depth, 2 * depth, depth, 3]
         layers, c_in = [], self.c0
         for i, c in enumerate(chans):
             layers.append(nn.ConvTranspose2d(c_in, c, 4, 2, 1))

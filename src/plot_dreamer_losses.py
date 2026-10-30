@@ -56,7 +56,7 @@ def main():
     matplotlib.rcParams["mathtext.fontset"] = "dejavusans"
     matplotlib.rcParams["axes.unicode_minus"] = False
     fig, axes = plt.subplots(3, 3, figsize=(15, 10.5), facecolor=SURFACE)
-    fig.suptitle("nano-Dreamer training curves: training losses every 250 steps (first 7 panels) and held-out evaluations (last 2)", fontsize=12.5, fontweight="bold", color=INK, y=0.985)
+    fig.suptitle("Dreamer training curves: training losses (first 7 panels) and held-out evaluations (last 2); size200m uses batch 32, all others batch 16", fontsize=12.5, fontweight="bold", color=INK, y=0.985)
     axes = axes.flatten()
     for ax in axes:
         ax.set_facecolor(SURFACE)

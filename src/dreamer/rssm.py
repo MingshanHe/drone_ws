@@ -24,13 +24,36 @@ class NormGRU(nn.Module):
         return update * cand + (1.0 - update) * h
 
 
+class BlockGRU(nn.Module):
+    """DreamerV3's large-model GRU: full input projection, block-diagonal recurrent weights
+    (`blocks` independent groups of deter/blocks units), LayerNorm on the gate pre-activations."""
+
+    def __init__(self, inp: int, deter: int, blocks: int):
+        super().__init__()
+        assert deter % blocks == 0
+        self.blocks, self.g = blocks, deter // blocks
+        self.inp = nn.Linear(inp, 3 * deter, bias=False)
+        self.rec = nn.Parameter(torch.randn(blocks, self.g, 3 * self.g) / self.g ** 0.5)
+        self.ln = nn.LayerNorm(3 * deter)
+
+    def forward(self, h, x):
+        B = h.shape[0]
+        hr = torch.einsum("bkg,kgo->bko", h.view(B, self.blocks, self.g), self.rec.to(h.dtype))  # (B, blocks, 3g)
+        hr = hr.view(B, self.blocks, 3, self.g).transpose(1, 2).reshape(B, -1)  # gate-major like inp
+        reset, cand, update = self.ln(self.inp(x) + hr).chunk(3, -1)
+        reset = torch.sigmoid(reset)
+        cand = torch.tanh(reset * cand)
+        update = torch.sigmoid(update - 1.0)
+        return update * cand + (1.0 - update) * h
+
+
 class RSSM(nn.Module):
     def __init__(self, embed_dim: int, action_dim: int, deter: int = 256, stoch: int = 16, classes: int = 16,
-                 hidden: int = 128, unimix: float = 0.01, free: float = 1.0):
+                 hidden: int = 128, unimix: float = 0.01, free: float = 1.0, blocks: int = 1):
         super().__init__()
         self.deter, self.stoch, self.classes, self.unimix, self.free = deter, stoch, classes, unimix, free
         self.img_in = nn.Sequential(nn.Linear(stoch * classes + action_dim, hidden), nn.LayerNorm(hidden), nn.SiLU())
-        self.gru = NormGRU(hidden, deter)
+        self.gru = NormGRU(hidden, deter) if blocks <= 1 else BlockGRU(hidden, deter, blocks)
         self.img_out = MLP(deter, hidden, 1, stoch * classes)  # prior logits
         self.obs_out = MLP(deter + embed_dim, hidden, 1, stoch * classes)  # posterior logits
         self.h0 = nn.Parameter(torch.zeros(deter))
